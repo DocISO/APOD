@@ -14,534 +14,399 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Design Tokens ─────────────────────────────────────────── */
+    /* ── Tokens ─────────────────────────────────────── */
     :root {
-      --space:       #050a18;
-      --deep:        #0b1427;
-      --nebula:      #0f1e3c;
-      --panel:       rgba(15, 30, 60, 0.72);
-      --border:      rgba(180, 200, 255, 0.10);
-      --gold:        #c8a96e;
-      --gold-glow:   rgba(200, 169, 110, 0.25);
-      --silver:      #a8b8d8;
-      --white:       #e8eef8;
-      --dim:         rgba(168, 184, 216, 0.55);
-      --accent:      #4a9eff;
-      --accent-dim:  rgba(74, 158, 255, 0.15);
-      --radius:      14px;
-      --font-display: 'Cormorant Garamond', Georgia, serif;
-      --font-mono:    'Space Mono', monospace;
+      --space:      #050a18;
+      --deep:       #0b1427;
+      --nebula:     #0f1e3c;
+      --panel:      rgba(15,30,60,0.72);
+      --border:     rgba(180,200,255,0.10);
+      --gold:       #c8a96e;
+      --gold-glow:  rgba(200,169,110,0.22);
+      --silver:     #a8b8d8;
+      --white:      #e8eef8;
+      --dim:        rgba(168,184,216,0.55);
+      --accent:     #4a9eff;
+      --accent-dim: rgba(74,158,255,0.15);
+      --radius:     14px;
+      --fd: 'Cormorant Garamond', Georgia, serif;
+      --fm: 'Space Mono', monospace;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { background: var(--space); }
-
     body {
-      min-height: 100dvh;
-      font-family: var(--font-display);
-      background: var(--space);
-      color: var(--white);
-      overflow-x: hidden;
-      position: relative;
+      min-height: 100dvh; font-family: var(--fd);
+      background: var(--space); color: var(--white); overflow-x: hidden;
     }
 
-    /* ── Starfield ─────────────────────────────────────────────── */
-    #stars {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .star {
-      position: absolute;
-      border-radius: 50%;
-      background: #fff;
-      animation: twinkle var(--dur, 4s) ease-in-out infinite;
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: var(--min, 0.2); transform: scale(1); }
-      50%       { opacity: var(--max, 1);   transform: scale(1.4); }
-    }
+    /* ── Stars ──────────────────────────────────────── */
+    #stars { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+    .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--dur,4s) ease-in-out infinite; }
+    @keyframes twinkle { 0%,100%{opacity:var(--min,.2);transform:scale(1)} 50%{opacity:var(--max,1);transform:scale(1.4)} }
 
-    /* ── Layout ────────────────────────────────────────────────── */
-    #app {
-      position: relative; z-index: 1;
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 0 0 120px;
-    }
+    /* ── Layout ─────────────────────────────────────── */
+    #app { position:relative; z-index:1; max-width:640px; margin:0 auto; padding-bottom:110px; }
 
-    /* ── Header ────────────────────────────────────────────────── */
-    header {
-      padding: 56px 24px 32px;
-      text-align: center;
-    }
-    .wordmark {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--gold);
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
-    h1 {
-      font-size: clamp(2.2rem, 8vw, 3.2rem);
-      font-weight: 300;
-      font-style: italic;
-      line-height: 1.1;
-      letter-spacing: -0.01em;
-      color: var(--white);
-    }
-    h1 span {
-      color: var(--gold);
-      font-style: normal;
-      font-weight: 600;
-    }
-    .date-badge {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 5px 14px;
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      color: var(--dim);
-      backdrop-filter: blur(8px);
-    }
+    /* ── Header ─────────────────────────────────────── */
+    header { padding:48px 24px 20px; text-align:center; }
+    .wordmark { font-family:var(--fm); font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); opacity:.8; margin-bottom:6px; }
+    h1 { font-size:clamp(1.9rem,7vw,2.8rem); font-weight:300; font-style:italic; line-height:1.1; color:var(--white); }
+    h1 span { color:var(--gold); font-style:normal; font-weight:600; }
 
-    /* ── Media card ────────────────────────────────────────────── */
+    /* ── Date strip ─────────────────────────────────── */
+    #strip-wrap { padding:8px 0 4px; position:relative; }
+    #strip-scroll {
+      display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory;
+      padding:4px 16px 10px; scrollbar-width:none;
+    }
+    #strip-scroll::-webkit-scrollbar { display:none; }
+    .strip-item {
+      flex-shrink:0; width:68px; scroll-snap-align:start; cursor:pointer;
+      border-radius:9px; overflow:hidden; border:2px solid transparent;
+      transition:border-color .2s,transform .15s,box-shadow .2s; background:var(--deep);
+    }
+    .strip-item:active { transform:scale(.94); }
+    .strip-item.active { border-color:var(--gold); box-shadow:0 0 14px var(--gold-glow); }
+    .strip-thumb { width:68px; height:46px; object-fit:cover; display:block; background:var(--nebula); }
+    .strip-label {
+      font-family:var(--fm); font-size:8.5px; letter-spacing:.04em; text-align:center;
+      padding:4px 2px 5px; color:var(--dim); background:var(--deep); white-space:nowrap; overflow:hidden;
+    }
+    .strip-item.active .strip-label { color:var(--gold); }
+    /* skeleton strip items */
+    .s-skel { flex-shrink:0; width:68px; border-radius:9px; overflow:hidden; }
+    .s-skel .sa { width:68px; height:46px; }
+    .s-skel .sb { width:68px; height:18px; margin-top:1px; }
+
+    /* prev/next */
+    .strip-nav {
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:28px; height:28px; border:1px solid var(--border); border-radius:50%;
+      background:rgba(5,10,24,.85); backdrop-filter:blur(8px);
+      color:var(--silver); font-size:15px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; z-index:4; transition:color .2s,border-color .2s;
+    }
+    .strip-nav:hover { color:var(--gold); border-color:var(--gold); }
+    #strip-prev { left:2px; }
+    #strip-next { right:2px; }
+
+    /* ── Tabs ───────────────────────────────────────── */
+    .tab { display:none; }
+    .tab.active { display:block; }
+
+    /* ── Media card ─────────────────────────────────── */
     #media-wrap {
-      margin: 0 16px;
-      border-radius: var(--radius);
-      overflow: hidden;
-      position: relative;
-      background: var(--deep);
-      box-shadow: 0 0 0 1px var(--border), 0 24px 80px rgba(0,0,20,0.7);
-      animation: fadeUp 0.8s ease both;
+      margin:4px 16px 0; border-radius:var(--radius); overflow:hidden;
+      background:var(--deep); box-shadow:0 0 0 1px var(--border),0 20px 70px rgba(0,0,20,.7);
+      display:none; animation:fadeUp .7s ease both; position:relative;
     }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    #apod-img {
-      width: 100%;
-      display: block;
-      aspect-ratio: 16/10;
-      object-fit: cover;
-      transition: transform 0.6s ease;
-    }
-    #apod-img:hover { transform: scale(1.015); }
-
-    #apod-video-wrap {
-      width: 100%;
-      aspect-ratio: 16/9;
-      display: none;
-    }
-    #apod-video-wrap iframe {
-      width: 100%; height: 100%;
-      border: none;
-    }
-
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    #apod-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
+    #apod-img:hover { transform:scale(1.012); }
+    #apod-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
+    #apod-video-wrap iframe { width:100%; height:100%; border:none; }
     .img-overlay {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 55%;
-      background: linear-gradient(to top, rgba(5,10,24,0.92) 0%, transparent 100%);
-      pointer-events: none;
+      position:absolute; bottom:0; left:0; right:0; height:50%;
+      background:linear-gradient(to top, rgba(5,10,24,.88) 0%, transparent 100%);
+      pointer-events:none;
     }
 
-    /* ── Info panel ────────────────────────────────────────────── */
+    /* ── Info ───────────────────────────────────────── */
     #info {
-      margin: 20px 16px 0;
-      padding: 28px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(16px);
-      animation: fadeUp 0.9s 0.1s ease both;
+      margin:14px 16px 0; padding:22px 26px;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); backdrop-filter:blur(16px);
+      display:none; animation:fadeUp .8s .07s ease both;
     }
-    #apod-title {
-      font-size: clamp(1.5rem, 5vw, 2.1rem);
-      font-weight: 600;
-      line-height: 1.2;
-      color: var(--white);
-      margin-bottom: 6px;
-    }
-    #apod-copyright {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--dim);
-      letter-spacing: 0.06em;
-      margin-bottom: 20px;
-    }
-    #apod-explanation {
-      font-size: 1.05rem;
-      font-weight: 300;
-      line-height: 1.75;
-      color: var(--silver);
-    }
+    #apod-title { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
+    #apod-meta  { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
+    #apod-explanation { font-size:1.02rem; font-weight:300; line-height:1.78; color:var(--silver); }
     #read-more-btn {
-      display: none;
-      margin-top: 12px;
-      background: none;
-      border: none;
-      color: var(--gold);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      text-transform: uppercase;
-      padding: 0;
+      display:none; margin-top:10px; background:none; border:none;
+      color:var(--gold); font-family:var(--fm); font-size:11px;
+      letter-spacing:.1em; cursor:pointer; text-transform:uppercase; padding:0;
     }
-    #read-more-btn:hover { opacity: 0.75; }
 
-    /* ── Settings panel ────────────────────────────────────────── */
+    /* ── Skeleton ───────────────────────────────────── */
+    .skeleton {
+      background:linear-gradient(90deg,var(--deep) 25%,var(--nebula) 50%,var(--deep) 75%);
+      background-size:200% 100%; animation:shimmer 1.6s infinite; border-radius:6px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sk-img   { width:100%; aspect-ratio:16/10; border-radius:var(--radius); }
+    .sk-title { height:28px; width:65%; margin-bottom:10px; }
+    .sk-sub   { height:12px; width:35%; margin-bottom:16px; }
+    .sk-line  { height:12px; width:100%; margin-bottom:7px; }
+    .sk-line.s { width:60%; }
+    #sk-wrap  { margin:4px 16px 0; }
+    #sk-info  { margin:14px 16px 0; padding:22px 26px; }
+
+    /* ── Search ─────────────────────────────────────── */
+    #tab-suche { padding:14px 0 0; }
+    .search-panel {
+      margin:0 16px 14px; padding:20px 22px;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); backdrop-filter:blur(16px);
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .panel-title {
+      font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase;
+      color:var(--gold); display:flex; align-items:center; gap:8px;
+    }
+    .panel-title::before { content:''; width:20px; height:1px; background:var(--gold); opacity:.5; }
+    .search-row { display:flex; gap:8px; }
+    #search-input {
+      flex:1; background:var(--deep); border:1px solid var(--border); border-radius:9px;
+      color:var(--white); font-family:var(--fd); font-size:1.05rem; padding:10px 14px; outline:none;
+      transition:border-color .2s;
+    }
+    #search-input:focus { border-color:var(--gold); }
+    #search-input::placeholder { color:var(--dim); font-style:italic; }
+    .search-filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .filter-lbl { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; }
+    select {
+      background:var(--deep); border:1px solid var(--border); border-radius:7px;
+      color:var(--silver); font-family:var(--fm); font-size:11px;
+      padding:6px 10px; outline:none; cursor:pointer; color-scheme:dark;
+    }
+    select:focus { border-color:var(--gold); }
+    .btn-gold {
+      padding:10px 20px; background:var(--gold); color:var(--space);
+      border:none; border-radius:9px; font-family:var(--fm); font-size:11px;
+      font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      cursor:pointer; flex-shrink:0; transition:opacity .2s,transform .1s;
+    }
+    .btn-gold:active { transform:scale(.96); }
+    .btn-gold:hover  { opacity:.85; }
+    .btn-gold:disabled { opacity:.35; cursor:not-allowed; }
+
+    /* Results */
+    #search-results { padding:0 16px; }
+    .results-meta {
+      font-family:var(--fm); font-size:10px; color:var(--dim);
+      letter-spacing:.08em; margin-bottom:12px; padding:0 2px; display:none;
+    }
+    .results-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .r-card {
+      border-radius:11px; overflow:hidden; cursor:pointer;
+      background:var(--deep); border:1px solid var(--border);
+      transition:border-color .2s,transform .15s,box-shadow .2s;
+      animation:fadeUp .35s ease both;
+    }
+    .r-card:hover { border-color:rgba(200,169,110,.35); box-shadow:0 6px 24px rgba(0,0,20,.5); }
+    .r-card:active { transform:scale(.97); }
+    .r-thumb { width:100%; aspect-ratio:16/10; object-fit:cover; display:block; background:var(--nebula); }
+    .r-body { padding:9px 11px 11px; }
+    .r-date  { font-family:var(--fm); font-size:9px; color:var(--gold); letter-spacing:.08em; margin-bottom:3px; }
+    .r-title { font-size:.88rem; font-weight:600; line-height:1.3; color:var(--white); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+    #search-empty {
+      display:none; text-align:center; padding:36px 20px;
+      color:var(--dim); font-size:1.05rem; font-style:italic; line-height:1.7;
+    }
+    #search-spinner {
+      display:none; text-align:center; padding:30px;
+      font-family:var(--fm); font-size:11px; color:var(--dim);
+      letter-spacing:.15em; text-transform:uppercase;
+    }
+    .spin-ring {
+      width:30px; height:30px; border:2px solid var(--border);
+      border-top-color:var(--gold); border-radius:50%;
+      animation:spin .85s linear infinite; margin:0 auto 12px;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── Settings ───────────────────────────────────── */
+    #tab-settings { padding:14px 0 0; }
     #settings {
-      margin: 20px 16px 0;
-      padding: 24px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(16px);
-      animation: fadeUp 1s 0.2s ease both;
+      margin:0 16px; padding:22px;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); backdrop-filter:blur(16px);
     }
-    .settings-title {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .stg-title {
+      font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase;
+      color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:8px;
     }
-    .settings-title::before {
-      content: '';
-      width: 20px; height: 1px;
-      background: var(--gold);
-      opacity: 0.5;
+    .stg-title::before { content:''; width:20px; height:1px; background:var(--gold); opacity:.5; }
+    .stg-row {
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      padding:13px 0; border-bottom:1px solid var(--border);
     }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .setting-row:last-child { border-bottom: none; }
-
-    .setting-label {
-      font-size: 1rem;
-      font-weight: 300;
-      color: var(--white);
-    }
-    .setting-sub {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--dim);
-      margin-top: 3px;
-      letter-spacing: 0.05em;
-    }
-
-    /* Toggle switch */
-    .toggle {
-      flex-shrink: 0;
-      width: 48px; height: 26px;
-      position: relative;
-    }
-    .toggle input { opacity: 0; width: 0; height: 0; }
+    .stg-row:last-child { border-bottom:none; }
+    .stg-lbl { font-size:1rem; font-weight:300; color:var(--white); }
+    .stg-sub { font-family:var(--fm); font-size:10px; color:var(--dim); margin-top:3px; letter-spacing:.05em; }
+    .toggle { flex-shrink:0; width:48px; height:26px; position:relative; }
+    .toggle input { opacity:0; width:0; height:0; }
     .toggle-track {
-      position: absolute; inset: 0;
-      background: var(--border);
-      border-radius: 100px;
-      border: 1px solid rgba(180,200,255,0.15);
-      cursor: pointer;
-      transition: background 0.3s;
+      position:absolute; inset:0; background:var(--border);
+      border-radius:100px; border:1px solid rgba(180,200,255,.15);
+      cursor:pointer; transition:background .3s;
     }
     .toggle-track::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 3px;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      background: var(--silver);
-      transition: transform 0.3s, background 0.3s;
+      content:''; position:absolute; top:3px; left:3px;
+      width:18px; height:18px; border-radius:50%;
+      background:var(--silver); transition:transform .3s,background .3s;
     }
-    .toggle input:checked + .toggle-track {
-      background: var(--gold-glow);
-      border-color: var(--gold);
-    }
-    .toggle input:checked + .toggle-track::after {
-      transform: translateX(22px);
-      background: var(--gold);
-    }
-
-    /* Time picker */
-    .time-row {
-      align-items: center;
-    }
+    .toggle input:checked + .toggle-track { background:var(--gold-glow); border-color:var(--gold); }
+    .toggle input:checked + .toggle-track::after { transform:translateX(22px); background:var(--gold); }
     #reminder-time {
-      background: var(--accent-dim);
-      border: 1px solid rgba(74,158,255,0.3);
-      color: var(--white);
-      font-family: var(--font-mono);
-      font-size: 1rem;
-      padding: 8px 14px;
-      border-radius: 8px;
-      outline: none;
-      cursor: pointer;
-      color-scheme: dark;
+      background:var(--accent-dim); border:1px solid rgba(74,158,255,.3);
+      color:var(--white); font-family:var(--fm); font-size:1rem;
+      padding:8px 14px; border-radius:8px; outline:none; cursor:pointer; color-scheme:dark;
     }
-    #reminder-time:focus { border-color: var(--accent); }
-
-    /* ── Status bar ────────────────────────────────────────────── */
-    #status {
-      margin: 16px 16px 0;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      display: none;
-    }
-    #status.success {
-      display: block;
-      background: rgba(74, 200, 110, 0.1);
-      border: 1px solid rgba(74,200,110,0.25);
-      color: #74c87a;
-    }
-    #status.error {
-      display: block;
-      background: rgba(255,100,80,0.1);
-      border: 1px solid rgba(255,100,80,0.25);
-      color: #ff8070;
-    }
-    #status.info {
-      display: block;
-      background: var(--accent-dim);
-      border: 1px solid rgba(74,158,255,0.2);
-      color: var(--accent);
-    }
-
-    /* ── Skeleton loader ───────────────────────────────────────── */
-    .skeleton {
-      background: linear-gradient(90deg, var(--deep) 25%, var(--nebula) 50%, var(--deep) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.6s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    .skel-img {
-      width: 100%; aspect-ratio: 16/10;
-      border-radius: var(--radius);
-    }
-    .skel-title { height: 32px; width: 70%; margin-bottom: 12px; }
-    .skel-sub   { height: 14px; width: 40%; margin-bottom: 20px; }
-    .skel-line  { height: 14px; width: 100%; margin-bottom: 8px; }
-    .skel-line.short { width: 65%; }
-
-    /* ── Nav bar ───────────────────────────────────────────────── */
-    nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: center;
-      padding: 0 16px env(safe-area-inset-bottom, 16px);
-      pointer-events: none;
-    }
-    .nav-pill {
-      pointer-events: all;
-      display: flex;
-      gap: 4px;
-      background: rgba(11,20,39,0.88);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 8px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 8px 40px rgba(0,0,20,0.6);
-      margin-bottom: 16px;
-    }
-    .nav-btn {
-      padding: 10px 22px;
-      border: none;
-      border-radius: 100px;
-      background: transparent;
-      color: var(--dim);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    .nav-btn.active {
-      background: var(--gold-glow);
-      color: var(--gold);
-      border: 1px solid rgba(200,169,110,0.3);
-    }
-    .nav-btn:not(.active):hover { color: var(--silver); }
-
-    /* ── Install banner ────────────────────────────────────────── */
-    #install-banner {
-      display: none;
-      margin: 16px 16px 0;
-      padding: 18px 20px;
-      background: linear-gradient(135deg, rgba(74,158,255,0.12), rgba(200,169,110,0.08));
-      border: 1px solid rgba(74,158,255,0.25);
-      border-radius: var(--radius);
-      animation: fadeUp 0.6s ease both;
-    }
-    #install-banner p {
-      font-size: 0.95rem;
-      font-weight: 300;
-      color: var(--silver);
-      margin-bottom: 12px;
-    }
-    .install-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-primary {
-      padding: 10px 20px;
-      background: var(--gold);
-      color: var(--space);
-      border: none;
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn-primary:hover { opacity: 0.85; }
-    .btn-ghost {
-      padding: 10px 20px;
-      background: transparent;
-      color: var(--dim);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-    .btn-ghost:hover { color: var(--silver); }
-
-    /* ── Tabs ──────────────────────────────────────────────────── */
-    .tab { display: none; }
-    .tab.active { display: block; }
-
-    /* ── API Key section ───────────────────────────────────────── */
-    .api-info {
-      margin: 20px 16px 0;
-      padding: 20px;
-      background: rgba(200,169,110,0.05);
-      border: 1px solid rgba(200,169,110,0.2);
-      border-radius: var(--radius);
-      font-size: 0.92rem;
-      font-weight: 300;
-      color: var(--silver);
-      line-height: 1.65;
-      animation: fadeUp 0.8s ease both;
-    }
-    .api-info a { color: var(--gold); text-decoration: none; }
-    .api-info a:hover { text-decoration: underline; }
-    .api-key-row {
-      display: flex; gap: 8px; margin-top: 14px;
-    }
+    .api-key-row { display:flex; gap:8px; margin-top:9px; width:100%; }
     #api-key-input {
-      flex: 1;
-      background: var(--deep);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--white);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 9px 12px;
-      outline: none;
+      flex:1; background:var(--deep); border:1px solid var(--border); border-radius:8px;
+      color:var(--white); font-family:var(--fm); font-size:12px; padding:9px 12px; outline:none;
     }
-    #api-key-input:focus { border-color: var(--gold); }
-    #api-key-input::placeholder { color: var(--dim); }
+    #api-key-input:focus { border-color:var(--gold); }
+    #api-key-input::placeholder { color:var(--dim); }
+    .btn-sm {
+      padding:9px 16px; background:var(--gold); color:var(--space);
+      border:none; border-radius:8px; font-family:var(--fm); font-size:11px;
+      font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; white-space:nowrap;
+    }
+    .api-note {
+      margin:12px 16px 0; padding:16px 18px; background:rgba(200,169,110,.05);
+      border:1px solid rgba(200,169,110,.2); border-radius:var(--radius);
+      font-size:.9rem; font-weight:300; color:var(--silver); line-height:1.65;
+    }
+    .api-note a { color:var(--gold); text-decoration:none; }
+    .api-note a:hover { text-decoration:underline; }
 
-    /* ── Responsive ────────────────────────────────────────────── */
-    @media (min-width: 480px) {
-      #media-wrap, #info, #settings, #install-banner, .api-info { margin-left: 24px; margin-right: 24px; }
+    /* ── Status ─────────────────────────────────────── */
+    #status { margin:10px 16px 0; padding:11px 18px; border-radius:10px; font-family:var(--fm); font-size:11px; letter-spacing:.06em; display:none; }
+    #status.success { display:block; background:rgba(74,200,110,.1); border:1px solid rgba(74,200,110,.25); color:#74c87a; }
+    #status.error   { display:block; background:rgba(255,100,80,.1); border:1px solid rgba(255,100,80,.25); color:#ff8070; }
+    #status.info    { display:block; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); color:var(--accent); }
+
+    /* ── Install banner ─────────────────────────────── */
+    #install-banner {
+      display:none; margin:10px 16px 0; padding:15px 18px;
+      background:linear-gradient(135deg,rgba(74,158,255,.12),rgba(200,169,110,.08));
+      border:1px solid rgba(74,158,255,.25); border-radius:var(--radius);
+    }
+    #install-banner p { font-size:.94rem; font-weight:300; color:var(--silver); margin-bottom:10px; }
+    .ib-btns { display:flex; gap:10px; }
+    .btn-ghost { padding:9px 16px; background:transparent; color:var(--dim); border:1px solid var(--border); border-radius:8px; font-family:var(--fm); font-size:11px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+
+    /* ── Nav ────────────────────────────────────────── */
+    nav { position:fixed; bottom:0; left:0; right:0; z-index:100; display:flex; justify-content:center; padding:0 16px env(safe-area-inset-bottom,14px); pointer-events:none; }
+    .nav-pill { pointer-events:all; display:flex; gap:2px; background:rgba(11,20,39,.92); border:1px solid var(--border); border-radius:100px; padding:6px; backdrop-filter:blur(20px); box-shadow:0 8px 40px rgba(0,0,20,.65); margin-bottom:12px; }
+    .nav-btn { padding:8px 16px; border:none; border-radius:100px; background:transparent; color:var(--dim); font-family:var(--fm); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
+    .nav-btn.active { background:var(--gold-glow); color:var(--gold); border:1px solid rgba(200,169,110,.3); }
+    .nav-btn:not(.active):hover { color:var(--silver); }
+
+    @media(min-width:480px){
+      #sk-wrap,#sk-info,#media-wrap,#info,#settings,
+      #install-banner,.api-note { margin-left:24px; margin-right:24px; }
+      .search-panel,#search-results { margin-left:24px; margin-right:24px; }
+      #strip-scroll { padding-left:24px; padding-right:24px; }
     }
   </style>
 </head>
 <body>
 
-<!-- Starfield -->
 <div id="stars"></div>
 
 <div id="app">
+
   <header>
     <div class="wordmark">NASA · APOD · Täglich</div>
-    <h1>Astronomy<br><span>Picture</span> of the Day</h1>
-    <div class="date-badge" id="header-date">Lade…</div>
+    <h1>Astronomy <span>Picture</span> of the Day</h1>
   </header>
 
-  <!-- Install Banner -->
+  <!-- Install -->
   <div id="install-banner">
-    <p>Installiere die App auf deinem Homescreen für tägliche Erinnerungen – auch offline.</p>
-    <div class="install-btns">
-      <button class="btn-primary" id="install-btn">Installieren</button>
+    <p>Installiere die App für tägliche Erinnerungen – auch offline verfügbar.</p>
+    <div class="ib-btns">
+      <button class="btn-gold" id="install-btn">Installieren</button>
       <button class="btn-ghost" id="dismiss-install">Später</button>
     </div>
   </div>
 
-  <!-- Status -->
   <div id="status"></div>
 
-  <!-- Tab: Bild -->
+  <!-- ═══ TAB: BILD ══════════════════════════════════════ -->
   <div class="tab active" id="tab-bild">
-    <!-- Skeleton while loading -->
-    <div id="skeleton-wrap" style="margin:0 16px">
-      <div class="skeleton skel-img"></div>
-      <div style="padding:28px 0 0">
-        <div class="skeleton skel-title"></div>
-        <div class="skeleton skel-sub"></div>
-        <div class="skeleton skel-line"></div>
-        <div class="skeleton skel-line"></div>
-        <div class="skeleton skel-line short"></div>
-      </div>
+
+    <!-- Date strip -->
+    <div id="strip-wrap">
+      <button class="strip-nav" id="strip-prev" title="Vorheriger Tag">‹</button>
+      <div id="strip-scroll"></div>
+      <button class="strip-nav" id="strip-next" title="Nächster Tag">›</button>
     </div>
 
-    <div id="media-wrap" style="display:none">
+    <!-- Skeleton -->
+    <div id="sk-wrap"><div class="skeleton sk-img"></div></div>
+    <div id="sk-info">
+      <div class="skeleton sk-title"></div>
+      <div class="skeleton sk-sub"></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line s"></div>
+    </div>
+
+    <!-- Media -->
+    <div id="media-wrap">
       <img id="apod-img" alt="APOD" loading="lazy" />
       <div id="apod-video-wrap"><iframe id="apod-iframe" allowfullscreen></iframe></div>
       <div class="img-overlay"></div>
     </div>
 
-    <div id="info" style="display:none">
+    <!-- Info -->
+    <div id="info">
       <div id="apod-title"></div>
-      <div id="apod-copyright"></div>
+      <div id="apod-meta"></div>
       <div id="apod-explanation"></div>
       <button id="read-more-btn">Mehr anzeigen ↓</button>
     </div>
+
   </div>
 
-  <!-- Tab: Einstellungen -->
-  <div class="tab" id="tab-settings">
-    <div id="settings">
-      <div class="settings-title">Einstellungen</div>
+  <!-- ═══ TAB: SUCHE ═════════════════════════════════════ -->
+  <div class="tab" id="tab-suche">
 
-      <!-- Notifications toggle -->
-      <div class="setting-row">
+    <div class="search-panel">
+      <div class="panel-title">Stichwortsuche</div>
+      <div class="search-row">
+        <input type="search" id="search-input" placeholder="z. B. Orion, Supernova, Saturn …" autocomplete="off" />
+        <button class="btn-gold" id="search-btn">Suchen</button>
+      </div>
+      <div class="search-filters">
+        <span class="filter-lbl">Zeitraum:</span>
+        <select id="scope-select">
+          <option value="100">Letzte 100 Tage</option>
+          <option value="365">Letztes Jahr</option>
+          <option value="year">Jahr wählen →</option>
+        </select>
+        <select id="year-select" style="display:none"></select>
+      </div>
+    </div>
+
+    <div id="search-results">
+      <div id="search-empty">Gib ein Stichwort ein und tippe auf „Suchen" 🔭</div>
+      <div id="search-spinner">
+        <div class="spin-ring"></div>
+        Lade APODs…
+      </div>
+      <div class="results-meta" id="results-meta"></div>
+      <div class="results-grid" id="results-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: EINSTELLUNGEN ════════════════════════════ -->
+  <div class="tab" id="tab-settings">
+
+    <div id="settings">
+      <div class="stg-title">Einstellungen</div>
+
+      <div class="stg-row">
         <div>
-          <div class="setting-label">Tägliche Erinnerung</div>
-          <div class="setting-sub" id="notif-status-text">Benachrichtigungen aktivieren</div>
+          <div class="stg-lbl">Tägliche Erinnerung</div>
+          <div class="stg-sub" id="notif-txt">Tippe zum Aktivieren</div>
         </div>
         <label class="toggle">
           <input type="checkbox" id="notif-toggle" />
@@ -549,298 +414,419 @@
         </label>
       </div>
 
-      <!-- Time picker -->
-      <div class="setting-row time-row">
+      <div class="stg-row">
         <div>
-          <div class="setting-label">Uhrzeit der Erinnerung</div>
-          <div class="setting-sub">Täglich zu dieser Zeit</div>
+          <div class="stg-lbl">Uhrzeit</div>
+          <div class="stg-sub">Täglich zu dieser Zeit</div>
         </div>
         <input type="time" id="reminder-time" value="20:00" />
       </div>
 
-      <!-- API Key -->
-      <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:10px">
+      <div class="stg-row" style="flex-direction:column;align-items:flex-start;gap:6px">
         <div>
-          <div class="setting-label">NASA API-Schlüssel</div>
-          <div class="setting-sub">Optional – DEMO_KEY hat 30 Anfragen/Stunde</div>
+          <div class="stg-lbl">NASA API-Schlüssel</div>
+          <div class="stg-sub">DEMO_KEY: 30/h · Eigener Key: unbegrenzt</div>
         </div>
         <div class="api-key-row">
-          <input type="text" id="api-key-input" placeholder="Dein API-Key oder leer lassen" maxlength="40" />
-          <button class="btn-primary" id="save-api-btn" style="white-space:nowrap">Speichern</button>
+          <input type="text" id="api-key-input" placeholder="Leer lassen = DEMO_KEY" maxlength="40" />
+          <button class="btn-sm" id="save-api-btn">Speichern</button>
         </div>
       </div>
     </div>
 
-    <div class="api-info">
-      🔑 <strong>Kostenlosen NASA-API-Schlüssel holen:</strong><br>
-      Besuche <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a> → „Generate API Key" → E-Mail bestätigen.<br>
-      Ohne Key funktioniert die App auch (DEMO_KEY, max. 30 Anfragen/Stunde).
+    <div class="api-note">
+      🔑 Kostenlosen Key bei <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a> holen
+      → „Generate API Key" → E-Mail bestätigen.
     </div>
+
   </div>
 
 </div><!-- /app -->
 
-<!-- Nav -->
 <nav>
   <div class="nav-pill">
     <button class="nav-btn active" data-tab="bild">🌌 Bild</button>
+    <button class="nav-btn" data-tab="suche">🔍 Suche</button>
     <button class="nav-btn" data-tab="settings">⚙ Einstellungen</button>
   </div>
 </nav>
 
 <script>
-// ── Utilities ──────────────────────────────────────────────────────────────
+'use strict';
+
+/* ── Utils ───────────────────────────────────── */
 const $ = id => document.getElementById(id);
 const ls = {
-  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  get: k => { try{return localStorage.getItem(k)}catch{return null} },
+  set: (k,v) => { try{localStorage.setItem(k,v)}catch{} },
 };
-
-function showStatus(msg, type = 'info') {
-  const el = $('status');
-  el.textContent = msg;
-  el.className = type;
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addDays(dateStr, n){
+  const d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function fmtShort(str){
+  const d=new Date(str+'T00:00:00');
+  return d.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
+}
+function fmtLong(str){
+  const d=new Date(str+'T00:00:00');
+  return d.toLocaleDateString('de-DE',{year:'numeric',month:'long',day:'numeric'});
+}
+function showStatus(msg,type='info'){
+  const el=$('status'); el.textContent=msg; el.className=type;
   clearTimeout(el._t);
-  if (type !== 'error') el._t = setTimeout(() => el.style.display = 'none', 4000);
+  if(type!=='error') el._t=setTimeout(()=>el.style.display='none',4200);
 }
 
-// ── Starfield ──────────────────────────────────────────────────────────────
-(function() {
-  const c = $('stars');
-  for (let i = 0; i < 180; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const sz = Math.random() * 2.2 + 0.3;
-    const dur = (Math.random() * 5 + 2).toFixed(1);
-    const min = (Math.random() * 0.3).toFixed(2);
-    const max = (Math.random() * 0.7 + 0.3).toFixed(2);
-    Object.assign(s.style, {
-      width: sz + 'px', height: sz + 'px',
-      top: Math.random() * 100 + '%',
-      left: Math.random() * 100 + '%',
-      '--dur': dur + 's',
-      '--min': min,
-      '--max': max,
-      animationDelay: (Math.random() * 5) + 's',
+/* ── Cache ───────────────────────────────────── */
+function saveApod(d){ if(d?.date) ls.set('a:'+d.date,JSON.stringify(d)); }
+function loadApod(date){ const s=ls.get('a:'+date); return s?JSON.parse(s):null; }
+function saveRange(arr){ arr.forEach(saveApod); }
+function rangeFromCache(start,end){
+  const out=[]; let d=new Date(start+'T00:00:00'); const e=new Date(end+'T00:00:00');
+  while(d<=e){
+    const ds=d.toISOString().slice(0,10); const c=loadApod(ds);
+    if(!c) return null; out.push(c); d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+
+/* ── State ───────────────────────────────────── */
+let currentDate = todayStr();
+let stripApods  = [];
+const STRIP_N   = 14;
+const APOD_MIN  = '1995-06-16';
+
+/* ── API ─────────────────────────────────────── */
+function apiKey(){ return ls.get('nasa-api-key')||'DEMO_KEY'; }
+
+async function apiFetch(date){
+  const cached=loadApod(date); if(cached) return cached;
+  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey()}&date=${date}&thumbs=true`);
+  if(!r.ok) throw new Error('API '+r.status);
+  const data=await r.json(); saveApod(data); return data;
+}
+
+async function apiRange(start,end){
+  const cached=rangeFromCache(start,end); if(cached) return cached;
+  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey()}&start_date=${start}&end_date=${end}&thumbs=true`);
+  if(!r.ok) throw new Error('API '+r.status);
+  const data=await r.json(); saveRange(data); return data;
+}
+
+/* ── Stars ───────────────────────────────────── */
+(()=>{
+  const c=$('stars');
+  for(let i=0;i<180;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.2+0.3;
+    Object.assign(s.style,{
+      width:sz+'px',height:sz+'px',
+      top:Math.random()*100+'%',left:Math.random()*100+'%',
+      '--dur':(Math.random()*5+2).toFixed(1)+'s',
+      '--min':(Math.random()*0.3).toFixed(2),
+      '--max':(Math.random()*0.7+0.3).toFixed(2),
+      animationDelay:(Math.random()*5)+'s',
     });
     c.appendChild(s);
   }
 })();
 
-// ── Service Worker ─────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
+/* ── Service Worker ──────────────────────────── */
+if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js')
-    .then(reg => {
-      window._swReg = reg;
-      scheduleReminderIfActive();
-    })
-    .catch(console.warn);
+    .then(r=>{ window._sw=r; scheduleAlarm(); }).catch(()=>{});
 }
 
-// ── PWA Install ────────────────────────────────────────────────────────────
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (!ls.get('install-dismissed')) {
-    $('install-banner').style.display = 'block';
-  }
+/* ── PWA Install ─────────────────────────────── */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  if(!ls.get('ib-dismissed')) $('install-banner').style.display='block';
 });
-$('install-btn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
+$('install-btn').addEventListener('click',async()=>{
+  if(!deferredPrompt) return;
   deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  $('install-banner').style.display = 'none';
-  if (outcome === 'accepted') showStatus('App installiert! 🎉', 'success');
+  const{outcome}=await deferredPrompt.userChoice;
+  deferredPrompt=null; $('install-banner').style.display='none';
+  if(outcome==='accepted') showStatus('App installiert! 🎉','success');
 });
-$('dismiss-install').addEventListener('click', () => {
-  ls.set('install-dismissed', '1');
-  $('install-banner').style.display = 'none';
+$('dismiss-install').addEventListener('click',()=>{
+  ls.set('ib-dismissed','1'); $('install-banner').style.display='none';
 });
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    $('tab-' + tab).classList.add('active');
-    btn.classList.add('active');
+/* ── Tab navigation ──────────────────────────── */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const t=btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+    $('tab-'+t).classList.add('active'); btn.classList.add('active');
   });
 });
 
-// ── APOD API ───────────────────────────────────────────────────────────────
-function getApiKey() {
-  return ls.get('nasa-api-key') || 'DEMO_KEY';
+/* ── Strip ───────────────────────────────────── */
+function showStripSkeletons(){
+  const sc=$('strip-scroll'); sc.innerHTML='';
+  for(let i=0;i<STRIP_N;i++)
+    sc.innerHTML+=`<div class="s-skel"><div class="skeleton sa"></div><div class="skeleton sb"></div></div>`;
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+function renderStrip(apods){
+  const sc=$('strip-scroll'); sc.innerHTML='';
+  // newest first
+  [...apods].sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>{
+    const el=document.createElement('div');
+    el.className='strip-item'+(d.date===currentDate?' active':'');
+    el.dataset.date=d.date;
+    const thumb=d.media_type==='video'
+      ? (d.thumbnail_url||svgPlay())
+      : (d.url||'');
+    el.innerHTML=`<img class="strip-thumb" src="${thumb}" alt="" loading="lazy"
+      onerror="this.src='${svgPlay()}'" />
+      <div class="strip-label">${fmtShort(d.date)}</div>`;
+    el.addEventListener('click',()=>selectDate(d.date));
+    sc.appendChild(el);
+  });
+  centerActive();
 }
 
-async function fetchApod() {
-  const today = todayStr();
-  const cached = ls.get('apod-cache-date');
-  if (cached === today) {
-    const data = JSON.parse(ls.get('apod-cache-data') || 'null');
-    if (data) return data;
+function svgPlay(){
+  return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 46'><rect fill='%230f1e3c' width='68' height='46'/><text x='34' y='29' text-anchor='middle' font-size='20' fill='%23c8a96e'>▶</text></svg>`;
+}
+
+function updateStripActive(){
+  document.querySelectorAll('.strip-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.date===currentDate);
+  });
+  centerActive();
+}
+
+function centerActive(){
+  const a=$('strip-scroll').querySelector('.strip-item.active');
+  if(a) setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}),60);
+}
+
+$('strip-prev').addEventListener('click',()=>{
+  const prev=addDays(currentDate,-1);
+  if(prev>=APOD_MIN) selectDate(prev);
+});
+$('strip-next').addEventListener('click',()=>{
+  const next=addDays(currentDate,1);
+  if(next<=todayStr()) selectDate(next);
+});
+
+async function loadStrip(){
+  showStripSkeletons();
+  const end=todayStr(), start=addDays(end,-(STRIP_N-1));
+  try{
+    stripApods=await apiRange(start,end);
+    renderStrip(stripApods);
+  } catch(e){
+    showStatus('Strip-Fehler: '+e.message,'error');
+    $('strip-scroll').innerHTML='';
   }
-  const key = getApiKey();
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${key}&thumbs=true`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API-Fehler ${res.status}`);
-  const data = await res.json();
-  ls.set('apod-cache-date', today);
-  ls.set('apod-cache-data', JSON.stringify(data));
-  return data;
 }
 
-const MAX_CHARS = 400;
+async function extendStripTo(date){
+  // If date is outside current strip window, reload strip centered around date
+  const end = date<=todayStr() ? date : todayStr();
+  const start = addDays(end,-(STRIP_N-1));
+  try{
+    stripApods=await apiRange(start,end);
+    renderStrip(stripApods);
+  } catch{}
+}
 
-async function renderApod() {
-  try {
-    const data = await fetchApod();
-    $('skeleton-wrap').style.display = 'none';
-    $('media-wrap').style.display = 'block';
-    $('info').style.display = 'block';
+/* ── Main APOD render ────────────────────────── */
+const MAX_EXP=430;
 
-    // Date
-    const d = new Date(data.date);
-    const opts = { year: 'numeric', month: 'long', day: 'numeric' };
-    $('header-date').textContent = d.toLocaleDateString('de-DE', opts);
+function showSkeleton(on){
+  $('sk-wrap').style.display=on?'block':'none';
+  $('sk-info').style.display=on?'block':'none';
+  $('media-wrap').style.display=on?'none':'block';
+  $('info').style.display=on?'none':'block';
+}
 
-    // Media
-    if (data.media_type === 'video') {
-      $('apod-img').style.display = 'none';
-      const vw = $('apod-video-wrap');
-      vw.style.display = 'block';
-      const src = data.thumbnail_url ? null : data.url;
-      if (data.thumbnail_url) {
-        $('apod-img').src = data.thumbnail_url;
-        $('apod-img').style.display = 'block';
-        $('apod-img').title = 'Video – tippe für NASA-Seite';
-        $('apod-img').style.cursor = 'pointer';
-        $('apod-img').addEventListener('click', () => window.open(data.url, '_blank'));
-        vw.style.display = 'none';
+async function selectDate(date){
+  currentDate=date;
+  updateStripActive();
+  // Is date outside strip window?
+  const inStrip=stripApods.some(a=>a.date===date);
+  if(!inStrip) await extendStripTo(date);
+  await renderMain(date);
+}
+
+async function renderMain(date){
+  showSkeleton(true);
+  try{
+    const d=await apiFetch(date);
+    showSkeleton(false);
+    const img=$('apod-img'), vw=$('apod-video-wrap');
+    if(d.media_type==='video'){
+      if(d.thumbnail_url){
+        img.src=d.thumbnail_url; img.style.display='block'; img.style.cursor='pointer';
+        img.title='Video öffnen'; img.onclick=()=>window.open(d.url,'_blank');
+        vw.style.display='none';
       } else {
-        $('apod-iframe').src = data.url;
+        img.style.display='none'; vw.style.display='block';
+        $('apod-iframe').src=d.url;
       }
     } else {
-      const img = $('apod-img');
-      img.src = data.hdurl || data.url;
-      img.alt = data.title;
-      img.style.display = 'block';
+      img.src=d.url; img.style.display='block';
+      img.style.cursor=''; img.title=''; img.onclick=null;
+      vw.style.display='none';
     }
-
-    // Text
-    $('apod-title').textContent = data.title;
-    $('apod-copyright').textContent = data.copyright
-      ? `© ${data.copyright.trim()}` : 'NASA / Public Domain';
-
-    const exp = data.explanation || '';
-    if (exp.length > MAX_CHARS) {
-      $('apod-explanation').textContent = exp.slice(0, MAX_CHARS) + '…';
-      const btn = $('read-more-btn');
-      btn.style.display = 'inline-block';
-      btn.onclick = () => {
-        $('apod-explanation').textContent = exp;
-        btn.style.display = 'none';
-      };
+    $('apod-title').textContent=d.title||'—';
+    $('apod-meta').textContent=(d.copyright?'© '+d.copyright.trim()+' · ':'')+fmtLong(d.date);
+    const exp=d.explanation||'';
+    const btn=$('read-more-btn');
+    if(exp.length>MAX_EXP){
+      $('apod-explanation').textContent=exp.slice(0,MAX_EXP)+'…';
+      btn.style.display='inline-block';
+      btn.onclick=()=>{ $('apod-explanation').textContent=exp; btn.style.display='none'; };
     } else {
-      $('apod-explanation').textContent = exp;
+      $('apod-explanation').textContent=exp; btn.style.display='none';
     }
-
-  } catch (err) {
-    $('skeleton-wrap').style.display = 'none';
-    showStatus('Fehler beim Laden: ' + err.message, 'error');
-
-    // Show cached if available
-    const cached = ls.get('apod-cache-data');
-    if (cached) {
-      showStatus('Zeige gecachtes Bild (offline)', 'info');
-      const d = JSON.parse(cached);
-      $('apod-title').textContent = d.title || '—';
-      $('apod-explanation').textContent = d.explanation || '';
-      if (d.url) { $('apod-img').src = d.url; }
-      $('media-wrap').style.display = 'block';
-      $('info').style.display = 'block';
+  } catch(e){
+    showSkeleton(false);
+    showStatus('Fehler: '+e.message,'error');
+    const cached=loadApod(date);
+    if(cached){
+      showStatus('Offline – gecachtes Bild','info');
+      $('apod-title').textContent=cached.title||'—';
+      $('apod-explanation').textContent=cached.explanation||'';
+      if(cached.url){ $('apod-img').src=cached.url; $('apod-img').style.display='block'; }
+      $('media-wrap').style.display='block'; $('info').style.display='block';
     }
   }
 }
 
-// ── Notifications ──────────────────────────────────────────────────────────
-const notifToggle  = $('notif-toggle');
-const reminderTime = $('reminder-time');
+/* ── Search ──────────────────────────────────── */
+// Build year dropdown
+(()=>{
+  const sel=$('year-select');
+  const thisY=new Date().getFullYear();
+  for(let y=thisY;y>=1995;y--){
+    const o=document.createElement('option'); o.value=o.textContent=y; sel.appendChild(o);
+  }
+})();
 
-function updateNotifStatusText(granted) {
-  $('notif-status-text').textContent = granted
-    ? '✓ Aktiviert'
-    : 'Tippe zum Aktivieren';
+$('scope-select').addEventListener('change',function(){
+  $('year-select').style.display=this.value==='year'?'inline-block':'none';
+});
+
+async function doSearch(){
+  const kw=$('search-input').value.trim().toLowerCase();
+  if(!kw){ showStatus('Bitte ein Stichwort eingeben.','info'); return; }
+
+  const btn=$('search-btn'); btn.disabled=true; btn.textContent='…';
+  $('search-empty').style.display='none';
+  $('results-meta').style.display='none';
+  $('results-grid').innerHTML='';
+  $('search-spinner').style.display='block';
+
+  try{
+    let apods=[];
+    const scope=$('scope-select').value;
+    if(scope==='year'){
+      const y=$('year-select').value;
+      const start=y+'-01-01';
+      const end=y==new Date().getFullYear()?todayStr():y+'-12-31';
+      apods=await apiRange(start,end);
+    } else {
+      const days=parseInt(scope);
+      apods=await apiRange(addDays(todayStr(),-days),todayStr());
+    }
+
+    const words=kw.split(/\s+/).filter(Boolean);
+    const hits=apods.filter(d=>{
+      const hay=((d.title||'')+(d.explanation||'')).toLowerCase();
+      return words.every(w=>hay.includes(w));
+    });
+
+    $('search-spinner').style.display='none';
+    showResults(hits,kw,apods.length);
+  } catch(e){
+    $('search-spinner').style.display='none';
+    showStatus('Suchfehler: '+e.message,'error');
+  } finally { btn.disabled=false; btn.textContent='Suchen'; }
 }
 
-// Init toggle from storage
-if (ls.get('notif-enabled') === '1' && Notification.permission === 'granted') {
-  notifToggle.checked = true;
-  updateNotifStatusText(true);
-}
-if (ls.get('reminder-time')) {
-  reminderTime.value = ls.get('reminder-time');
-}
-
-notifToggle.addEventListener('change', async () => {
-  if (!notifToggle.checked) {
-    ls.set('notif-enabled', '0');
-    updateNotifStatusText(false);
-    showStatus('Erinnerungen deaktiviert.', 'info');
+function showResults(results,kw,total){
+  const grid=$('results-grid'), meta=$('results-meta');
+  grid.innerHTML='';
+  if(!results.length){
+    $('search-empty').style.display='block';
+    $('search-empty').innerHTML=`Keine Treffer für „<em>${kw}</em>"<br>in ${total} geprüften APODs.`;
     return;
   }
-  if (!('Notification' in window)) {
-    showStatus('Benachrichtigungen werden in diesem Browser nicht unterstützt.', 'error');
-    notifToggle.checked = false;
-    return;
-  }
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    ls.set('notif-enabled', '1');
-    updateNotifStatusText(true);
-    scheduleReminderIfActive();
-    showStatus('Erinnerungen aktiviert! 🌌', 'success');
-  } else {
-    notifToggle.checked = false;
-    showStatus('Berechtigung verweigert. Bitte in den Browser-Einstellungen erlauben.', 'error');
-  }
-});
-
-reminderTime.addEventListener('change', () => {
-  ls.set('reminder-time', reminderTime.value);
-  scheduleReminderIfActive();
-  showStatus(`Erinnerung gespeichert: ${reminderTime.value} Uhr`, 'success');
-});
-
-function scheduleReminderIfActive() {
-  if (ls.get('notif-enabled') !== '1') return;
-  if (Notification.permission !== 'granted') return;
-  if (!window._swReg) return;
-  const [h, m] = (ls.get('reminder-time') || '20:00').split(':').map(Number);
-  window._swReg.active?.postMessage({ type: 'SCHEDULE_REMINDER', hour: h, minute: m });
+  meta.style.display='block';
+  meta.textContent=`${results.length} Treffer in ${total} APODs`;
+  results.sort((a,b)=>b.date.localeCompare(a.date));
+  results.forEach((d,i)=>{
+    const card=document.createElement('div');
+    card.className='r-card'; card.style.animationDelay=(i*.04)+'s';
+    const thumb=d.media_type==='video'?(d.thumbnail_url||''):( d.url||'');
+    card.innerHTML=`
+      <img class="r-thumb" src="${thumb}" alt="" loading="lazy"
+        onerror="this.style.opacity='.3';this.style.background='var(--nebula)'" />
+      <div class="r-body">
+        <div class="r-date">${fmtShort(d.date)} ${new Date(d.date+'T00:00:00').getFullYear()}</div>
+        <div class="r-title">${d.title||'—'}</div>
+      </div>`;
+    card.addEventListener('click',()=>{
+      // Switch to Bild tab, load selected APOD
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+      $('tab-bild').classList.add('active');
+      document.querySelector('[data-tab="bild"]').classList.add('active');
+      selectDate(d.date);
+    });
+    grid.appendChild(card);
+  });
 }
 
-// ── API Key save ───────────────────────────────────────────────────────────
-$('save-api-btn').addEventListener('click', () => {
-  const val = $('api-key-input').value.trim();
-  ls.set('nasa-api-key', val);
-  // Clear cache to force reload with new key
-  ls.set('apod-cache-date', '');
-  showStatus(val ? 'API-Key gespeichert. Lade neu…' : 'API-Key entfernt. Nutze DEMO_KEY.', 'success');
-  setTimeout(() => renderApod(), 800);
+$('search-input').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+$('search-btn').addEventListener('click',doSearch);
+
+/* ── Notifications ───────────────────────────── */
+const nToggle=$('notif-toggle'), rTime=$('reminder-time');
+function setNotifTxt(on){ $('notif-txt').textContent=on?'✓ Aktiviert':'Tippe zum Aktivieren'; }
+if(ls.get('notif-on')==='1'&&Notification.permission==='granted'){ nToggle.checked=true; setNotifTxt(true); }
+if(ls.get('alarm-time')) rTime.value=ls.get('alarm-time');
+
+nToggle.addEventListener('change',async()=>{
+  if(!nToggle.checked){ ls.set('notif-on','0'); setNotifTxt(false); showStatus('Erinnerungen deaktiviert.','info'); return; }
+  if(!('Notification' in window)){ showStatus('Nicht unterstützt.','error'); nToggle.checked=false; return; }
+  const p=await Notification.requestPermission();
+  if(p==='granted'){ ls.set('notif-on','1'); setNotifTxt(true); scheduleAlarm(); showStatus('Erinnerungen aktiviert! 🌌','success'); }
+  else { nToggle.checked=false; showStatus('Berechtigung verweigert.','error'); }
 });
-if (ls.get('nasa-api-key')) {
-  $('api-key-input').value = ls.get('nasa-api-key');
+rTime.addEventListener('change',()=>{
+  ls.set('alarm-time',rTime.value); scheduleAlarm();
+  showStatus('Erinnerung: '+rTime.value+' Uhr gespeichert.','success');
+});
+function scheduleAlarm(){
+  if(ls.get('notif-on')!=='1'||Notification.permission!=='granted'||!window._sw?.active) return;
+  const[h,m]=(ls.get('alarm-time')||'20:00').split(':').map(Number);
+  window._sw.active.postMessage({type:'SCHEDULE_REMINDER',hour:h,minute:m});
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-renderApod();
+/* ── API Key ─────────────────────────────────── */
+$('save-api-btn').addEventListener('click',()=>{
+  const v=$('api-key-input').value.trim(); ls.set('nasa-api-key',v);
+  Object.keys(localStorage).filter(k=>k.startsWith('a:')).forEach(k=>localStorage.removeItem(k));
+  showStatus(v?'API-Key gespeichert.':'DEMO_KEY wird verwendet.','success');
+  setTimeout(()=>{ loadStrip(); renderMain(currentDate); },500);
+});
+if(ls.get('nasa-api-key')) $('api-key-input').value=ls.get('nasa-api-key');
+
+/* ── Init ────────────────────────────────────── */
+showSkeleton(true);
+loadStrip();
+renderMain(currentDate);
 </script>
 </body>
 </html>
