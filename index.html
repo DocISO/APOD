@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>APOD – Astronomy Picture of the Day</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#050a18" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --space:       #050a18;
+      --deep:        #0b1427;
+      --nebula:      #0f1e3c;
+      --panel:       rgba(15, 30, 60, 0.72);
+      --border:      rgba(180, 200, 255, 0.10);
+      --gold:        #c8a96e;
+      --gold-glow:   rgba(200, 169, 110, 0.25);
+      --silver:      #a8b8d8;
+      --white:       #e8eef8;
+      --dim:         rgba(168, 184, 216, 0.55);
+      --accent:      #4a9eff;
+      --accent-dim:  rgba(74, 158, 255, 0.15);
+      --radius:      14px;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-mono:    'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background: var(--space); }
+
+    body {
+      min-height: 100dvh;
+      font-family: var(--font-display);
+      background: var(--space);
+      color: var(--white);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── Starfield ─────────────────────────────────────────────── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--dur, 4s) ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: var(--min, 0.2); transform: scale(1); }
+      50%       { opacity: var(--max, 1);   transform: scale(1.4); }
+    }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    #app {
+      position: relative; z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 0 120px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      padding: 56px 24px 32px;
+      text-align: center;
+    }
+    .wordmark {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: var(--white);
+    }
+    h1 span {
+      color: var(--gold);
+      font-style: normal;
+      font-weight: 600;
+    }
+    .date-badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--dim);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ── Media card ────────────────────────────────────────────── */
+    #media-wrap {
+      margin: 0 16px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      background: var(--deep);
+      box-shadow: 0 0 0 1px var(--border), 0 24px 80px rgba(0,0,20,0.7);
+      animation: fadeUp 0.8s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #apod-img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    #apod-img:hover { transform: scale(1.015); }
+
+    #apod-video-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: none;
+    }
+    #apod-video-wrap iframe {
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    .img-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 55%;
+      background: linear-gradient(to top, rgba(5,10,24,0.92) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* ── Info panel ────────────────────────────────────────────── */
+    #info {
+      margin: 20px 16px 0;
+      padding: 28px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(16px);
+      animation: fadeUp 0.9s 0.1s ease both;
+    }
+    #apod-title {
+      font-size: clamp(1.5rem, 5vw, 2.1rem);
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    #apod-copyright {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      margin-bottom: 20px;
+    }
+    #apod-explanation {
+      font-size: 1.05rem;
+      font-weight: 300;
+      line-height: 1.75;
+      color: var(--silver);
+    }
+    #read-more-btn {
+      display: none;
+      margin-top: 12px;
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 0;
+    }
+    #read-more-btn:hover { opacity: 0.75; }
+
+    /* ── Settings panel ────────────────────────────────────────── */
+    #settings {
+      margin: 20px 16px 0;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(16px);
+      animation: fadeUp 1s 0.2s ease both;
+    }
+    .settings-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-title::before {
+      content: '';
+      width: 20px; height: 1px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--white);
+    }
+    .setting-sub {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--dim);
+      margin-top: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      flex-shrink: 0;
+      width: 48px; height: 26px;
+      position: relative;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 100px;
+      border: 1px solid rgba(180,200,255,0.15);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--silver);
+      transition: transform 0.3s, background 0.3s;
+    }
+    .toggle input:checked + .toggle-track {
+      background: var(--gold-glow);
+      border-color: var(--gold);
+    }
+    .toggle input:checked + .toggle-track::after {
+      transform: translateX(22px);
+      background: var(--gold);
+    }
+
+    /* Time picker */
+    .time-row {
+      align-items: center;
+    }
+    #reminder-time {
+      background: var(--accent-dim);
+      border: 1px solid rgba(74,158,255,0.3);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+      color-scheme: dark;
+    }
+    #reminder-time:focus { border-color: var(--accent); }
+
+    /* ── Status bar ────────────────────────────────────────────── */
+    #status {
+      margin: 16px 16px 0;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      display: none;
+    }
+    #status.success {
+      display: block;
+      background: rgba(74, 200, 110, 0.1);
+      border: 1px solid rgba(74,200,110,0.25);
+      color: #74c87a;
+    }
+    #status.error {
+      display: block;
+      background: rgba(255,100,80,0.1);
+      border: 1px solid rgba(255,100,80,0.25);
+      color: #ff8070;
+    }
+    #status.info {
+      display: block;
+      background: var(--accent-dim);
+      border: 1px solid rgba(74,158,255,0.2);
+      color: var(--accent);
+    }
+
+    /* ── Skeleton loader ───────────────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--deep) 25%, var(--nebula) 50%, var(--deep) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skel-img {
+      width: 100%; aspect-ratio: 16/10;
+      border-radius: var(--radius);
+    }
+    .skel-title { height: 32px; width: 70%; margin-bottom: 12px; }
+    .skel-sub   { height: 14px; width: 40%; margin-bottom: 20px; }
+    .skel-line  { height: 14px; width: 100%; margin-bottom: 8px; }
+    .skel-line.short { width: 65%; }
+
+    /* ── Nav bar ───────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      padding: 0 16px env(safe-area-inset-bottom, 16px);
+      pointer-events: none;
+    }
+    .nav-pill {
+      pointer-events: all;
+      display: flex;
+      gap: 4px;
+      background: rgba(11,20,39,0.88);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 40px rgba(0,0,20,0.6);
+      margin-bottom: 16px;
+    }
+    .nav-btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 100px;
+      background: transparent;
+      color: var(--dim);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-btn.active {
+      background: var(--gold-glow);
+      color: var(--gold);
+      border: 1px solid rgba(200,169,110,0.3);
+    }
+    .nav-btn:not(.active):hover { color: var(--silver); }
+
+    /* ── Install banner ────────────────────────────────────────── */
+    #install-banner {
+      display: none;
+      margin: 16px 16px 0;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, rgba(74,158,255,0.12), rgba(200,169,110,0.08));
+      border: 1px solid rgba(74,158,255,0.25);
+      border-radius: var(--radius);
+      animation: fadeUp 0.6s ease both;
+    }
+    #install-banner p {
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--silver);
+      margin-bottom: 12px;
+    }
+    .install-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 10px 20px;
+      background: var(--gold);
+      color: var(--space);
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-ghost {
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--dim);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--silver); }
+
+    /* ── Tabs ──────────────────────────────────────────────────── */
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    /* ── API Key section ───────────────────────────────────────── */
+    .api-info {
+      margin: 20px 16px 0;
+      padding: 20px;
+      background: rgba(200,169,110,0.05);
+      border: 1px solid rgba(200,169,110,0.2);
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      font-weight: 300;
+      color: var(--silver);
+      line-height: 1.65;
+      animation: fadeUp 0.8s ease both;
+    }
+    .api-info a { color: var(--gold); text-decoration: none; }
+    .api-info a:hover { text-decoration: underline; }
+    .api-key-row {
+      display: flex; gap: 8px; margin-top: 14px;
+    }
+    #api-key-input {
+      flex: 1;
+      background: var(--deep);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 9px 12px;
+      outline: none;
+    }
+    #api-key-input:focus { border-color: var(--gold); }
+    #api-key-input::placeholder { color: var(--dim); }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (min-width: 480px) {
+      #media-wrap, #info, #settings, #install-banner, .api-info { margin-left: 24px; margin-right: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="stars"></div>
+
+<div id="app">
+  <header>
+    <div class="wordmark">NASA · APOD · Täglich</div>
+    <h1>Astronomy<br><span>Picture</span> of the Day</h1>
+    <div class="date-badge" id="header-date">Lade…</div>
+  </header>
+
+  <!-- Install Banner -->
+  <div id="install-banner">
+    <p>Installiere die App auf deinem Homescreen für tägliche Erinnerungen – auch offline.</p>
+    <div class="install-btns">
+      <button class="btn-primary" id="install-btn">Installieren</button>
+      <button class="btn-ghost" id="dismiss-install">Später</button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status"></div>
+
+  <!-- Tab: Bild -->
+  <div class="tab active" id="tab-bild">
+    <!-- Skeleton while loading -->
+    <div id="skeleton-wrap" style="margin:0 16px">
+      <div class="skeleton skel-img"></div>
+      <div style="padding:28px 0 0">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-sub"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line short"></div>
+      </div>
+    </div>
+
+    <div id="media-wrap" style="display:none">
+      <img id="apod-img" alt="APOD" loading="lazy" />
+      <div id="apod-video-wrap"><iframe id="apod-iframe" allowfullscreen></iframe></div>
+      <div class="img-overlay"></div>
+    </div>
+
+    <div id="info" style="display:none">
+      <div id="apod-title"></div>
+      <div id="apod-copyright"></div>
+      <div id="apod-explanation"></div>
+      <button id="read-more-btn">Mehr anzeigen ↓</button>
+    </div>
+  </div>
+
+  <!-- Tab: Einstellungen -->
+  <div class="tab" id="tab-settings">
+    <div id="settings">
+      <div class="settings-title">Einstellungen</div>
+
+      <!-- Notifications toggle -->
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Tägliche Erinnerung</div>
+          <div class="setting-sub" id="notif-status-text">Benachrichtigungen aktivieren</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="notif-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <!-- Time picker -->
+      <div class="setting-row time-row">
+        <div>
+          <div class="setting-label">Uhrzeit der Erinnerung</div>
+          <div class="setting-sub">Täglich zu dieser Zeit</div>
+        </div>
+        <input type="time" id="reminder-time" value="20:00" />
+      </div>
+
+      <!-- API Key -->
+      <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:10px">
+        <div>
+          <div class="setting-label">NASA API-Schlüssel</div>
+          <div class="setting-sub">Optional – DEMO_KEY hat 30 Anfragen/Stunde</div>
+        </div>
+        <div class="api-key-row">
+          <input type="text" id="api-key-input" placeholder="Dein API-Key oder leer lassen" maxlength="40" />
+          <button class="btn-primary" id="save-api-btn" style="white-space:nowrap">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-info">
+      🔑 <strong>Kostenlosen NASA-API-Schlüssel holen:</strong><br>
+      Besuche <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a> → „Generate API Key" → E-Mail bestätigen.<br>
+      Ohne Key funktioniert die App auch (DEMO_KEY, max. 30 Anfragen/Stunde).
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Nav -->
+<nav>
+  <div class="nav-pill">
+    <button class="nav-btn active" data-tab="bild">🌌 Bild</button>
+    <button class="nav-btn" data-tab="settings">⚙ Einstellungen</button>
+  </div>
+</nav>
+
+<script>
+// ── Utilities ──────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const ls = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+};
+
+function showStatus(msg, type = 'info') {
+  const el = $('status');
+  el.textContent = msg;
+  el.className = type;
+  clearTimeout(el._t);
+  if (type !== 'error') el._t = setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// ── Starfield ──────────────────────────────────────────────────────────────
+(function() {
+  const c = $('stars');
+  for (let i = 0; i < 180; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.2 + 0.3;
+    const dur = (Math.random() * 5 + 2).toFixed(1);
+    const min = (Math.random() * 0.3).toFixed(2);
+    const max = (Math.random() * 0.7 + 0.3).toFixed(2);
+    Object.assign(s.style, {
+      width: sz + 'px', height: sz + 'px',
+      top: Math.random() * 100 + '%',
+      left: Math.random() * 100 + '%',
+      '--dur': dur + 's',
+      '--min': min,
+      '--max': max,
+      animationDelay: (Math.random() * 5) + 's',
+    });
+    c.appendChild(s);
+  }
+})();
+
+// ── Service Worker ─────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      window._swReg = reg;
+      scheduleReminderIfActive();
+    })
+    .catch(console.warn);
+}
+
+// ── PWA Install ────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!ls.get('install-dismissed')) {
+    $('install-banner').style.display = 'block';
+  }
+});
+$('install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $('install-banner').style.display = 'none';
+  if (outcome === 'accepted') showStatus('App installiert! 🎉', 'success');
+});
+$('dismiss-install').addEventListener('click', () => {
+  ls.set('install-dismissed', '1');
+  $('install-banner').style.display = 'none';
+});
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    $('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+  });
+});
+
+// ── APOD API ───────────────────────────────────────────────────────────────
+function getApiKey() {
+  return ls.get('nasa-api-key') || 'DEMO_KEY';
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function fetchApod() {
+  const today = todayStr();
+  const cached = ls.get('apod-cache-date');
+  if (cached === today) {
+    const data = JSON.parse(ls.get('apod-cache-data') || 'null');
+    if (data) return data;
+  }
+  const key = getApiKey();
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${key}&thumbs=true`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API-Fehler ${res.status}`);
+  const data = await res.json();
+  ls.set('apod-cache-date', today);
+  ls.set('apod-cache-data', JSON.stringify(data));
+  return data;
+}
+
+const MAX_CHARS = 400;
+
+async function renderApod() {
+  try {
+    const data = await fetchApod();
+    $('skeleton-wrap').style.display = 'none';
+    $('media-wrap').style.display = 'block';
+    $('info').style.display = 'block';
+
+    // Date
+    const d = new Date(data.date);
+    const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+    $('header-date').textContent = d.toLocaleDateString('de-DE', opts);
+
+    // Media
+    if (data.media_type === 'video') {
+      $('apod-img').style.display = 'none';
+      const vw = $('apod-video-wrap');
+      vw.style.display = 'block';
+      const src = data.thumbnail_url ? null : data.url;
+      if (data.thumbnail_url) {
+        $('apod-img').src = data.thumbnail_url;
+        $('apod-img').style.display = 'block';
+        $('apod-img').title = 'Video – tippe für NASA-Seite';
+        $('apod-img').style.cursor = 'pointer';
+        $('apod-img').addEventListener('click', () => window.open(data.url, '_blank'));
+        vw.style.display = 'none';
+      } else {
+        $('apod-iframe').src = data.url;
+      }
+    } else {
+      const img = $('apod-img');
+      img.src = data.hdurl || data.url;
+      img.alt = data.title;
+      img.style.display = 'block';
+    }
+
+    // Text
+    $('apod-title').textContent = data.title;
+    $('apod-copyright').textContent = data.copyright
+      ? `© ${data.copyright.trim()}` : 'NASA / Public Domain';
+
+    const exp = data.explanation || '';
+    if (exp.length > MAX_CHARS) {
+      $('apod-explanation').textContent = exp.slice(0, MAX_CHARS) + '…';
+      const btn = $('read-more-btn');
+      btn.style.display = 'inline-block';
+      btn.onclick = () => {
+        $('apod-explanation').textContent = exp;
+        btn.style.display = 'none';
+      };
+    } else {
+      $('apod-explanation').textContent = exp;
+    }
+
+  } catch (err) {
+    $('skeleton-wrap').style.display = 'none';
+    showStatus('Fehler beim Laden: ' + err.message, 'error');
+
+    // Show cached if available
+    const cached = ls.get('apod-cache-data');
+    if (cached) {
+      showStatus('Zeige gecachtes Bild (offline)', 'info');
+      const d = JSON.parse(cached);
+      $('apod-title').textContent = d.title || '—';
+      $('apod-explanation').textContent = d.explanation || '';
+      if (d.url) { $('apod-img').src = d.url; }
+      $('media-wrap').style.display = 'block';
+      $('info').style.display = 'block';
+    }
+  }
+}
+
+// ── Notifications ──────────────────────────────────────────────────────────
+const notifToggle  = $('notif-toggle');
+const reminderTime = $('reminder-time');
+
+function updateNotifStatusText(granted) {
+  $('notif-status-text').textContent = granted
+    ? '✓ Aktiviert'
+    : 'Tippe zum Aktivieren';
+}
+
+// Init toggle from storage
+if (ls.get('notif-enabled') === '1' && Notification.permission === 'granted') {
+  notifToggle.checked = true;
+  updateNotifStatusText(true);
+}
+if (ls.get('reminder-time')) {
+  reminderTime.value = ls.get('reminder-time');
+}
+
+notifToggle.addEventListener('change', async () => {
+  if (!notifToggle.checked) {
+    ls.set('notif-enabled', '0');
+    updateNotifStatusText(false);
+    showStatus('Erinnerungen deaktiviert.', 'info');
+    return;
+  }
+  if (!('Notification' in window)) {
+    showStatus('Benachrichtigungen werden in diesem Browser nicht unterstützt.', 'error');
+    notifToggle.checked = false;
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    ls.set('notif-enabled', '1');
+    updateNotifStatusText(true);
+    scheduleReminderIfActive();
+    showStatus('Erinnerungen aktiviert! 🌌', 'success');
+  } else {
+    notifToggle.checked = false;
+    showStatus('Berechtigung verweigert. Bitte in den Browser-Einstellungen erlauben.', 'error');
+  }
+});
+
+reminderTime.addEventListener('change', () => {
+  ls.set('reminder-time', reminderTime.value);
+  scheduleReminderIfActive();
+  showStatus(`Erinnerung gespeichert: ${reminderTime.value} Uhr`, 'success');
+});
+
+function scheduleReminderIfActive() {
+  if (ls.get('notif-enabled') !== '1') return;
+  if (Notification.permission !== 'granted') return;
+  if (!window._swReg) return;
+  const [h, m] = (ls.get('reminder-time') || '20:00').split(':').map(Number);
+  window._swReg.active?.postMessage({ type: 'SCHEDULE_REMINDER', hour: h, minute: m });
+}
+
+// ── API Key save ───────────────────────────────────────────────────────────
+$('save-api-btn').addEventListener('click', () => {
+  const val = $('api-key-input').value.trim();
+  ls.set('nasa-api-key', val);
+  // Clear cache to force reload with new key
+  ls.set('apod-cache-date', '');
+  showStatus(val ? 'API-Key gespeichert. Lade neu…' : 'API-Key entfernt. Nutze DEMO_KEY.', 'success');
+  setTimeout(() => renderApod(), 800);
+});
+if (ls.get('nasa-api-key')) {
+  $('api-key-input').value = ls.get('nasa-api-key');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderApod();
+</script>
+</body>
+</html>
