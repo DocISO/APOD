@@ -102,10 +102,10 @@
       display:none; animation:fadeUp .7s ease both; position:relative;
     }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    #apod-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
-    #apod-img:hover { transform:scale(1.012); }
-    #apod-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
-    #apod-video-wrap iframe { width:100%; height:100%; border:none; }
+    #-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
+    #-img:hover { transform:scale(1.012); }
+    #-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
+    #-video-wrap iframe { width:100%; height:100%; border:none; }
     .img-overlay {
       position:absolute; bottom:0; left:0; right:0; height:50%;
       background:linear-gradient(to top, rgba(5,10,24,.88) 0%, transparent 100%);
@@ -119,9 +119,9 @@
       border-radius:var(--radius); backdrop-filter:blur(16px);
       display:none; animation:fadeUp .8s .07s ease both;
     }
-    #apod-title { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
-    #apod-meta  { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
-    #apod-explanation { font-size:1.02rem; font-weight:300; line-height:1.78; color:var(--silver); }
+    #-title { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
+    #-meta  { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
+    #-explanation { font-size:1.02rem; font-weight:300; line-height:1.78; color:var(--silver); }
     #read-more-btn {
       display:none; margin-top:10px; background:none; border:none;
       color:var(--gold); font-family:var(--fm); font-size:11px;
@@ -313,7 +313,7 @@
 <div id="app">
 
   <header>
-    <div class="wordmark">NASA · APOD · Täglich</div>
+    <div class="wordmark">APOD</div>
     <h1>Astronomy <span>Picture</span> of the Day</h1>
   </header>
 
