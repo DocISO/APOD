@@ -73,6 +73,53 @@
     #apod-video-wrap iframe { width:100%; height:100%; border:none; }
     .img-overlay { position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(to top,rgba(5,10,24,.88) 0%,transparent 100%); pointer-events:none; }
 
+    /* Zoom hint badge on image */
+    #zoom-hint {
+      position:absolute; top:10px; right:10px; z-index:3;
+      background:rgba(5,10,24,.72); border:1px solid var(--border);
+      border-radius:100px; backdrop-filter:blur(8px);
+      font-family:var(--fm); font-size:10px; letter-spacing:.08em;
+      color:var(--dim); padding:4px 10px; pointer-events:none;
+      opacity:0; transition:opacity .3s;
+    }
+    #media-wrap:hover #zoom-hint { opacity:1; }
+    #apod-img[data-clickable="1"] { cursor:zoom-in; }
+
+    /* Lightbox */
+    #lightbox {
+      position:fixed; inset:0; z-index:1000;
+      background:rgba(3,6,14,.96); backdrop-filter:blur(12px);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    #lightbox.open { opacity:1; pointer-events:all; }
+    #lb-img {
+      max-width:100dvw; max-height:100dvh;
+      object-fit:contain; display:block;
+      border-radius:4px;
+      transition:opacity .3s;
+      cursor:zoom-out;
+    }
+    #lb-spinner {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:36px; height:36px; border:2px solid rgba(200,169,110,.2);
+      border-top-color:var(--gold); border-radius:50%; animation:spin .9s linear infinite;
+    }
+    #lb-close {
+      position:absolute; top:env(safe-area-inset-top,14px); right:16px;
+      width:36px; height:36px; background:rgba(5,10,24,.8); border:1px solid var(--border);
+      border-radius:50%; color:var(--silver); font-size:20px; line-height:1;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; z-index:2; transition:color .2s,border-color .2s;
+    }
+    #lb-close:hover { color:var(--gold); border-color:var(--gold); }
+    #lb-res {
+      position:absolute; bottom:env(safe-area-inset-bottom,16px); left:50%; transform:translateX(-50%);
+      font-family:var(--fm); font-size:10px; letter-spacing:.12em; color:var(--dim);
+      background:rgba(5,10,24,.7); border:1px solid var(--border);
+      border-radius:100px; padding:4px 14px; white-space:nowrap;
+    }
+
     /* Info card */
     #info { margin:14px 16px 0; padding:22px 26px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); backdrop-filter:blur(16px); display:none; animation:fadeUp .8s .07s ease both; }
     .lang-badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--fm); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(200,169,110,.3); border-radius:100px; padding:3px 10px; margin-bottom:12px; }
@@ -236,6 +283,15 @@
       <img id="apod-img" alt="APOD" loading="lazy" />
       <div id="apod-video-wrap"><iframe id="apod-iframe" allowfullscreen></iframe></div>
       <div class="img-overlay"></div>
+      <div id="zoom-hint">🔍 Vollauflösung</div>
+    </div>
+
+    <!-- Lightbox (outside app container so it's truly fullscreen) -->
+    <div id="lightbox" role="dialog" aria-modal="true">
+      <div id="lb-spinner"></div>
+      <img id="lb-img" alt="APOD Vollauflösung" />
+      <button id="lb-close" aria-label="Schließen">×</button>
+      <div id="lb-res"></div>
     </div>
 
     <div id="info">
@@ -696,10 +752,22 @@ async function renderMain(date){
     // Media
     const img=$('apod-img'), vw=$('apod-video-wrap');
     if(d.media_type==='video'){
-      if(d.thumbnail_url){ img.src=d.thumbnail_url; img.style.display='block'; img.style.cursor='pointer'; img.title='Video öffnen'; img.onclick=()=>window.open(d.url,'_blank'); vw.style.display='none'; }
-      else{ img.style.display='none'; vw.style.display='block'; $('apod-iframe').src=d.url; }
+      if(d.thumbnail_url){
+        img.src=d.thumbnail_url; img.style.display='block';
+        img.removeAttribute('data-clickable');
+        img.onclick=()=>window.open(d.url,'_blank');
+        $('zoom-hint').textContent='▶ Video öffnen';
+        vw.style.display='none';
+      } else {
+        img.style.display='none'; vw.style.display='block'; $('apod-iframe').src=d.url;
+      }
     } else {
-      img.src=d.url; img.style.display='block'; img.style.cursor=''; img.title=''; img.onclick=null; vw.style.display='none';
+      img.src=d.url; img.style.display='block'; vw.style.display='none';
+      // Enable lightbox with HD url
+      const hdurl=d.hdurl||d.url;
+      img.dataset.clickable='1';
+      img.onclick=()=>openLightbox(hdurl);
+      $('zoom-hint').textContent='🔍 Vollauflösung';
     }
 
     // English text
@@ -764,6 +832,54 @@ function scheduleAlarm(){
   const[h,m]=(ls.get('alarm-time')||'20:00').split(':').map(Number);
   window._sw.active.postMessage({type:'SCHEDULE_REMINDER',hour:h,minute:m});
 }
+
+/* ── Lightbox ────────────────────────────────────────── */
+const lb      = $('lightbox');
+const lbImg   = $('lb-img');
+const lbSpin  = $('lb-spinner');
+const lbRes   = $('lb-res');
+
+function openLightbox(hdurl){
+  // Show overlay immediately with spinner
+  lbImg.style.opacity='0';
+  lbSpin.style.display='block';
+  lbRes.style.display='none';
+  lb.classList.add('open');
+  document.body.style.overflow='hidden';
+
+  // Load full-res image
+  const tmp=new Image();
+  tmp.onload=()=>{
+    lbImg.src=hdurl;
+    lbImg.style.opacity='1';
+    lbSpin.style.display='none';
+    lbRes.textContent=tmp.naturalWidth+'×'+tmp.naturalHeight+' px';
+    lbRes.style.display='block';
+  };
+  tmp.onerror=()=>{
+    // Fallback to standard url
+    lbImg.src=hdurl;
+    lbImg.style.opacity='1';
+    lbSpin.style.display='none';
+  };
+  tmp.src=hdurl;
+}
+
+function closeLightbox(){
+  lb.classList.remove('open');
+  document.body.style.overflow='';
+  // Short delay before clearing src to avoid flash
+  setTimeout(()=>{ if(!lb.classList.contains('open')) lbImg.src=''; },300);
+}
+
+$('lb-close').addEventListener('click', closeLightbox);
+lbImg.addEventListener('click', closeLightbox);
+
+// Close on backdrop click (outside image)
+lb.addEventListener('click', e=>{ if(e.target===lb) closeLightbox(); });
+
+// Close on Escape
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
 
 /* ── API Key ─────────────────────────────────────────── */
 $('save-api-btn').addEventListener('click',()=>{
