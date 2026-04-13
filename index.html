@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>APOD – Astronomy Picture of the Day</title>
+  <title>APOD – Weltraumbild des Tages</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#050a18" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -12,296 +12,186 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-
   <style>
-    /* ── Tokens ─────────────────────────────────────── */
     :root {
-      --space:      #050a18;
-      --deep:       #0b1427;
-      --nebula:     #0f1e3c;
+      --space:      #050a18;  --deep:      #0b1427;  --nebula:    #0f1e3c;
       --panel:      rgba(15,30,60,0.72);
       --border:     rgba(180,200,255,0.10);
-      --gold:       #c8a96e;
-      --gold-glow:  rgba(200,169,110,0.22);
-      --silver:     #a8b8d8;
-      --white:      #e8eef8;
+      --gold:       #c8a96e;  --gold-glow: rgba(200,169,110,0.22);
+      --silver:     #a8b8d8;  --white:     #e8eef8;
       --dim:        rgba(168,184,216,0.55);
-      --accent:     #4a9eff;
-      --accent-dim: rgba(74,158,255,0.15);
-      --radius:     14px;
+      --accent:     #4a9eff;  --accent-dim:rgba(74,158,255,0.15);
+      --green-bg:   rgba(74,200,110,0.08); --green-b: rgba(74,200,110,0.25);
+      --radius: 14px;
       --fd: 'Cormorant Garamond', Georgia, serif;
       --fm: 'Space Mono', monospace;
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { background: var(--space); }
-    body {
-      min-height: 100dvh; font-family: var(--fd);
-      background: var(--space); color: var(--white); overflow-x: hidden;
-    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { background:var(--space); }
+    body { min-height:100dvh; font-family:var(--fd); background:var(--space); color:var(--white); overflow-x:hidden; }
 
-    /* ── Stars ──────────────────────────────────────── */
+    /* Stars */
     #stars { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-    .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--dur,4s) ease-in-out infinite; }
+    .star  { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--dur,4s) ease-in-out infinite; }
     @keyframes twinkle { 0%,100%{opacity:var(--min,.2);transform:scale(1)} 50%{opacity:var(--max,1);transform:scale(1.4)} }
 
-    /* ── Layout ─────────────────────────────────────── */
-    #app { position:relative; z-index:1; max-width:640px; margin:0 auto; padding-bottom:110px; }
+    /* Layout */
+    #app { position:relative; z-index:1; max-width:640px; margin:0 auto; padding-bottom:105px; }
 
-    /* ── Header ─────────────────────────────────────── */
-    header { padding:48px 24px 20px; text-align:center; }
+    /* Header */
+    header { padding:48px 24px 18px; text-align:center; }
     .wordmark { font-family:var(--fm); font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); opacity:.8; margin-bottom:6px; }
-    h1 { font-size:clamp(1.9rem,7vw,2.8rem); font-weight:300; font-style:italic; line-height:1.1; color:var(--white); }
+    h1 { font-size:clamp(1.8rem,6.5vw,2.7rem); font-weight:300; font-style:italic; line-height:1.1; }
     h1 span { color:var(--gold); font-style:normal; font-weight:600; }
 
-    /* ── Date strip ─────────────────────────────────── */
+    /* Strip */
     #strip-wrap { padding:8px 0 4px; position:relative; }
-    #strip-scroll {
-      display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory;
-      padding:4px 16px 10px; scrollbar-width:none;
-    }
+    #strip-scroll { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 20px 10px; scrollbar-width:none; }
     #strip-scroll::-webkit-scrollbar { display:none; }
-    .strip-item {
-      flex-shrink:0; width:68px; scroll-snap-align:start; cursor:pointer;
-      border-radius:9px; overflow:hidden; border:2px solid transparent;
-      transition:border-color .2s,transform .15s,box-shadow .2s; background:var(--deep);
-    }
+    .strip-item { flex-shrink:0; width:74px; scroll-snap-align:center; cursor:pointer; border-radius:10px; overflow:hidden; border:2px solid transparent; transition:border-color .2s,transform .15s,box-shadow .2s; background:var(--deep); }
     .strip-item:active { transform:scale(.94); }
-    .strip-item.active { border-color:var(--gold); box-shadow:0 0 14px var(--gold-glow); }
-    .strip-thumb { width:68px; height:46px; object-fit:cover; display:block; background:var(--nebula); }
-    .strip-label {
-      font-family:var(--fm); font-size:8.5px; letter-spacing:.04em; text-align:center;
-      padding:4px 2px 5px; color:var(--dim); background:var(--deep); white-space:nowrap; overflow:hidden;
-    }
+    .strip-item.active { border-color:var(--gold); box-shadow:0 0 16px var(--gold-glow); }
+    .strip-thumb { width:74px; height:50px; object-fit:cover; display:block; background:var(--nebula); }
+    .strip-label { font-family:var(--fm); font-size:9px; letter-spacing:.04em; text-align:center; padding:5px 2px 6px; color:var(--dim); background:var(--deep); white-space:nowrap; overflow:hidden; }
     .strip-item.active .strip-label { color:var(--gold); }
-    /* skeleton strip items */
-    .s-skel { flex-shrink:0; width:68px; border-radius:9px; overflow:hidden; }
-    .s-skel .sa { width:68px; height:46px; }
-    .s-skel .sb { width:68px; height:18px; margin-top:1px; }
-
-    /* prev/next */
-    .strip-nav {
-      position:absolute; top:50%; transform:translateY(-50%);
-      width:28px; height:28px; border:1px solid var(--border); border-radius:50%;
-      background:rgba(5,10,24,.85); backdrop-filter:blur(8px);
-      color:var(--silver); font-size:15px;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; z-index:4; transition:color .2s,border-color .2s;
-    }
+    .s-skel { flex-shrink:0; width:74px; border-radius:10px; overflow:hidden; }
+    .s-skel .sa { width:74px; height:50px; }
+    .s-skel .sb { width:74px; height:20px; margin-top:1px; }
+    .strip-nav { position:absolute; top:50%; transform:translateY(-50%); width:28px; height:28px; border:1px solid var(--border); border-radius:50%; background:rgba(5,10,24,.88); backdrop-filter:blur(8px); color:var(--silver); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:4; transition:color .2s,border-color .2s; }
     .strip-nav:hover { color:var(--gold); border-color:var(--gold); }
-    #strip-prev { left:2px; }
-    #strip-next { right:2px; }
+    #strip-prev { left:2px; } #strip-next { right:2px; }
 
-    /* ── Tabs ───────────────────────────────────────── */
-    .tab { display:none; }
-    .tab.active { display:block; }
+    /* Tabs */
+    .tab { display:none; } .tab.active { display:block; }
 
-    /* ── Media card ─────────────────────────────────── */
-    #media-wrap {
-      margin:4px 16px 0; border-radius:var(--radius); overflow:hidden;
-      background:var(--deep); box-shadow:0 0 0 1px var(--border),0 20px 70px rgba(0,0,20,.7);
-      display:none; animation:fadeUp .7s ease both; position:relative;
-    }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    #-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
-    #-img:hover { transform:scale(1.012); }
-    #-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
-    #-video-wrap iframe { width:100%; height:100%; border:none; }
-    .img-overlay {
-      position:absolute; bottom:0; left:0; right:0; height:50%;
-      background:linear-gradient(to top, rgba(5,10,24,.88) 0%, transparent 100%);
-      pointer-events:none;
-    }
+    /* Media */
+    #media-wrap { margin:4px 16px 0; border-radius:var(--radius); overflow:hidden; background:var(--deep); box-shadow:0 0 0 1px var(--border),0 20px 70px rgba(0,0,20,.7); display:none; position:relative; animation:fadeUp .7s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    #apod-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
+    #apod-img:hover { transform:scale(1.012); }
+    #apod-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
+    #apod-video-wrap iframe { width:100%; height:100%; border:none; }
+    .img-overlay { position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(to top,rgba(5,10,24,.88) 0%,transparent 100%); pointer-events:none; }
 
-    /* ── Info ───────────────────────────────────────── */
-    #info {
-      margin:14px 16px 0; padding:22px 26px;
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:var(--radius); backdrop-filter:blur(16px);
-      display:none; animation:fadeUp .8s .07s ease both;
-    }
-    #-title { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
-    #-meta  { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
-    #-explanation { font-size:1.02rem; font-weight:300; line-height:1.78; color:var(--silver); }
-    #read-more-btn {
-      display:none; margin-top:10px; background:none; border:none;
-      color:var(--gold); font-family:var(--fm); font-size:11px;
-      letter-spacing:.1em; cursor:pointer; text-transform:uppercase; padding:0;
-    }
+    /* Info card */
+    #info { margin:14px 16px 0; padding:22px 26px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); backdrop-filter:blur(16px); display:none; animation:fadeUp .8s .07s ease both; }
+    .lang-badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--fm); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(200,169,110,.3); border-radius:100px; padding:3px 10px; margin-bottom:12px; }
+    #apod-title  { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
+    #apod-meta   { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
+    #apod-text   { font-size:1.02rem; font-weight:300; line-height:1.8; color:var(--silver); }
+    #read-more-btn { display:none; margin-top:10px; background:none; border:none; color:var(--gold); font-family:var(--fm); font-size:11px; letter-spacing:.1em; cursor:pointer; text-transform:uppercase; padding:0; }
 
-    /* ── Skeleton ───────────────────────────────────── */
-    .skeleton {
-      background:linear-gradient(90deg,var(--deep) 25%,var(--nebula) 50%,var(--deep) 75%);
-      background-size:200% 100%; animation:shimmer 1.6s infinite; border-radius:6px;
-    }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .sk-img   { width:100%; aspect-ratio:16/10; border-radius:var(--radius); }
-    .sk-title { height:28px; width:65%; margin-bottom:10px; }
-    .sk-sub   { height:12px; width:35%; margin-bottom:16px; }
-    .sk-line  { height:12px; width:100%; margin-bottom:7px; }
-    .sk-line.s { width:60%; }
-    #sk-wrap  { margin:4px 16px 0; }
-    #sk-info  { margin:14px 16px 0; padding:22px 26px; }
+    /* ── Objects section ──────────────────────────── */
+    #objects-wrap { margin-top:20px; display:none; }
+    .obj-header { font-family:var(--fm); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .obj-header::before { content:''; width:16px; height:1px; background:var(--dim); opacity:.5; }
+    #obj-chips { display:flex; flex-wrap:wrap; gap:7px; }
 
-    /* ── Search ─────────────────────────────────────── */
-    #tab-suche { padding:14px 0 0; }
-    .search-panel {
-      margin:0 16px 14px; padding:20px 22px;
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:var(--radius); backdrop-filter:blur(16px);
-      display:flex; flex-direction:column; gap:12px;
+    .chip {
+      padding:5px 13px; border-radius:100px; font-family:var(--fm); font-size:10px;
+      letter-spacing:.07em; cursor:pointer; transition:all .18s;
+      background:transparent; display:inline-flex; align-items:center; gap:5px;
+      white-space:nowrap;
     }
-    .panel-title {
-      font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase;
-      color:var(--gold); display:flex; align-items:center; gap:8px;
-    }
-    .panel-title::before { content:''; width:20px; height:1px; background:var(--gold); opacity:.5; }
-    .search-row { display:flex; gap:8px; }
-    #search-input {
-      flex:1; background:var(--deep); border:1px solid var(--border); border-radius:9px;
-      color:var(--white); font-family:var(--fd); font-size:1.05rem; padding:10px 14px; outline:none;
-      transition:border-color .2s;
-    }
-    #search-input:focus { border-color:var(--gold); }
-    #search-input::placeholder { color:var(--dim); font-style:italic; }
-    .search-filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .filter-lbl { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; }
-    select {
-      background:var(--deep); border:1px solid var(--border); border-radius:7px;
-      color:var(--silver); font-family:var(--fm); font-size:11px;
-      padding:6px 10px; outline:none; cursor:pointer; color-scheme:dark;
-    }
-    select:focus { border-color:var(--gold); }
-    .btn-gold {
-      padding:10px 20px; background:var(--gold); color:var(--space);
-      border:none; border-radius:9px; font-family:var(--fm); font-size:11px;
-      font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-      cursor:pointer; flex-shrink:0; transition:opacity .2s,transform .1s;
-    }
-    .btn-gold:active { transform:scale(.96); }
-    .btn-gold:hover  { opacity:.85; }
-    .btn-gold:disabled { opacity:.35; cursor:not-allowed; }
+    /* DSO chip – gold */
+    .chip-dso { border:1px solid rgba(200,169,110,.4); color:var(--gold); }
+    .chip-dso:hover { background:var(--gold-glow); }
+    .chip-dso::before { content:'◎'; font-size:10px; }
+    /* Planet chip – blue */
+    .chip-planet { border:1px solid rgba(74,158,255,.4); color:var(--accent); }
+    .chip-planet:hover { background:var(--accent-dim); }
+    .chip-planet.active { background:var(--accent-dim); border-color:var(--accent); }
+    .chip-planet::before { content:'⬤'; font-size:7px; }
+    /* Moon chip – silver */
+    .chip-moon { border:1px solid rgba(168,184,216,.4); color:var(--silver); }
+    .chip-moon:hover { background:rgba(168,184,216,.08); }
+    .chip-moon.active { background:rgba(168,184,216,.1); border-color:var(--silver); }
+    .chip-moon::before { content:'☽'; font-size:11px; }
+    /* Sun chip – orange (SOHO link) */
+    .chip-sun { border:1px solid rgba(255,180,50,.4); color:#ffb432; }
+    .chip-sun:hover { background:rgba(255,180,50,.08); }
+    .chip-sun::before { content:'☀'; font-size:11px; }
 
-    /* Results */
-    #search-results { padding:0 16px; }
-    .results-meta {
-      font-family:var(--fm); font-size:10px; color:var(--dim);
-      letter-spacing:.08em; margin-bottom:12px; padding:0 2px; display:none;
-    }
-    .results-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-    .r-card {
-      border-radius:11px; overflow:hidden; cursor:pointer;
-      background:var(--deep); border:1px solid var(--border);
-      transition:border-color .2s,transform .15s,box-shadow .2s;
-      animation:fadeUp .35s ease both;
-    }
-    .r-card:hover { border-color:rgba(200,169,110,.35); box-shadow:0 6px 24px rgba(0,0,20,.5); }
-    .r-card:active { transform:scale(.97); }
-    .r-thumb { width:100%; aspect-ratio:16/10; object-fit:cover; display:block; background:var(--nebula); }
-    .r-body { padding:9px 11px 11px; }
-    .r-date  { font-family:var(--fm); font-size:9px; color:var(--gold); letter-spacing:.08em; margin-bottom:3px; }
-    .r-title { font-size:.88rem; font-weight:600; line-height:1.3; color:var(--white); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    /* Visibility detail card */
+    #obj-detail { margin-top:11px; }
+    .vis-loading { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); border-radius:9px; font-family:var(--fm); font-size:10px; color:var(--accent); letter-spacing:.07em; }
+    .vis-card { padding:13px 16px; background:rgba(74,158,255,.06); border:1px solid rgba(74,158,255,.2); border-radius:9px; font-family:var(--fm); font-size:11px; color:var(--silver); letter-spacing:.04em; line-height:1.8; }
+    .vis-card strong { color:var(--white); }
+    .vis-card .vis-row { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:5px; }
+    .vis-tag { display:inline-flex; align-items:center; gap:4px; color:var(--dim); font-size:10px; }
+    .vis-tag b { color:var(--silver); }
+    .vis-unavail { font-style:italic; color:var(--dim); padding:8px 0; font-family:var(--fm); font-size:10px; }
 
-    #search-empty {
-      display:none; text-align:center; padding:36px 20px;
-      color:var(--dim); font-size:1.05rem; font-style:italic; line-height:1.7;
-    }
-    #search-spinner {
-      display:none; text-align:center; padding:30px;
-      font-family:var(--fm); font-size:11px; color:var(--dim);
-      letter-spacing:.15em; text-transform:uppercase;
-    }
-    .spin-ring {
-      width:30px; height:30px; border:2px solid var(--border);
-      border-top-color:var(--gold); border-radius:50%;
-      animation:spin .85s linear infinite; margin:0 auto 12px;
-    }
+    /* German source */
+    #de-status { display:none; margin-top:14px; padding:10px 14px; border-radius:9px; font-family:var(--fm); font-size:10px; letter-spacing:.06em; }
+    #de-status.loading { display:flex; gap:8px; align-items:center; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); color:var(--accent); }
+    #de-status.warn    { display:block; background:rgba(200,169,110,.07); border:1px solid rgba(200,169,110,.2); color:var(--gold); }
+    #de-link-row { display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    #de-link-row .de-src { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; }
+    #de-link-row a { font-family:var(--fm); font-size:10px; color:var(--gold); text-decoration:none; letter-spacing:.06em; border:1px solid rgba(200,169,110,.25); border-radius:6px; padding:4px 10px; transition:background .2s; }
+    #de-link-row a:hover { background:var(--gold-glow); }
+    .mini-spin { width:12px; height:12px; border:1.5px solid rgba(74,158,255,.3); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; flex-shrink:0; }
     @keyframes spin { to{transform:rotate(360deg)} }
 
-    /* ── Settings ───────────────────────────────────── */
+    /* Skeleton */
+    .skeleton { background:linear-gradient(90deg,var(--deep) 25%,var(--nebula) 50%,var(--deep) 75%); background-size:200% 100%; animation:shimmer 1.6s infinite; border-radius:6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sk-img  { width:100%; aspect-ratio:16/10; border-radius:var(--radius); }
+    .sk-title{ height:28px; width:65%; margin-bottom:10px; }
+    .sk-sub  { height:12px; width:35%; margin-bottom:16px; }
+    .sk-line { height:12px; width:100%; margin-bottom:7px; }
+    .sk-line.s{ width:60%; }
+    #sk-wrap { margin:4px 16px 0; }
+    #sk-info { margin:14px 16px 0; padding:22px 26px; }
+
+    /* Settings */
     #tab-settings { padding:14px 0 0; }
-    #settings {
-      margin:0 16px; padding:22px;
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:var(--radius); backdrop-filter:blur(16px);
-    }
-    .stg-title {
-      font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase;
-      color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:8px;
-    }
+    #settings { margin:0 16px; padding:22px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); backdrop-filter:blur(16px); }
+    .stg-title { font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
     .stg-title::before { content:''; width:20px; height:1px; background:var(--gold); opacity:.5; }
-    .stg-row {
-      display:flex; align-items:center; justify-content:space-between; gap:16px;
-      padding:13px 0; border-bottom:1px solid var(--border);
-    }
+    .stg-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:13px 0; border-bottom:1px solid var(--border); }
     .stg-row:last-child { border-bottom:none; }
-    .stg-lbl { font-size:1rem; font-weight:300; color:var(--white); }
+    .stg-lbl { font-size:1rem; font-weight:300; }
     .stg-sub { font-family:var(--fm); font-size:10px; color:var(--dim); margin-top:3px; letter-spacing:.05em; }
     .toggle { flex-shrink:0; width:48px; height:26px; position:relative; }
     .toggle input { opacity:0; width:0; height:0; }
-    .toggle-track {
-      position:absolute; inset:0; background:var(--border);
-      border-radius:100px; border:1px solid rgba(180,200,255,.15);
-      cursor:pointer; transition:background .3s;
-    }
-    .toggle-track::after {
-      content:''; position:absolute; top:3px; left:3px;
-      width:18px; height:18px; border-radius:50%;
-      background:var(--silver); transition:transform .3s,background .3s;
-    }
+    .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:100px; border:1px solid rgba(180,200,255,.15); cursor:pointer; transition:background .3s; }
+    .toggle-track::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:var(--silver); transition:transform .3s,background .3s; }
     .toggle input:checked + .toggle-track { background:var(--gold-glow); border-color:var(--gold); }
     .toggle input:checked + .toggle-track::after { transform:translateX(22px); background:var(--gold); }
-    #reminder-time {
-      background:var(--accent-dim); border:1px solid rgba(74,158,255,.3);
-      color:var(--white); font-family:var(--fm); font-size:1rem;
-      padding:8px 14px; border-radius:8px; outline:none; cursor:pointer; color-scheme:dark;
-    }
+    #reminder-time { background:var(--accent-dim); border:1px solid rgba(74,158,255,.3); color:var(--white); font-family:var(--fm); font-size:1rem; padding:8px 14px; border-radius:8px; outline:none; cursor:pointer; color-scheme:dark; }
     .api-key-row { display:flex; gap:8px; margin-top:9px; width:100%; }
-    #api-key-input {
-      flex:1; background:var(--deep); border:1px solid var(--border); border-radius:8px;
-      color:var(--white); font-family:var(--fm); font-size:12px; padding:9px 12px; outline:none;
-    }
+    #api-key-input { flex:1; background:var(--deep); border:1px solid var(--border); border-radius:8px; color:var(--white); font-family:var(--fm); font-size:12px; padding:9px 12px; outline:none; }
     #api-key-input:focus { border-color:var(--gold); }
     #api-key-input::placeholder { color:var(--dim); }
-    .btn-sm {
-      padding:9px 16px; background:var(--gold); color:var(--space);
-      border:none; border-radius:8px; font-family:var(--fm); font-size:11px;
-      font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; white-space:nowrap;
-    }
-    .api-note {
-      margin:12px 16px 0; padding:16px 18px; background:rgba(200,169,110,.05);
-      border:1px solid rgba(200,169,110,.2); border-radius:var(--radius);
-      font-size:.9rem; font-weight:300; color:var(--silver); line-height:1.65;
-    }
+    .btn-sm { padding:9px 16px; background:var(--gold); color:var(--space); border:none; border-radius:8px; font-family:var(--fm); font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+    .api-note { margin:12px 16px 0; padding:15px 18px; background:rgba(200,169,110,.05); border:1px solid rgba(200,169,110,.2); border-radius:var(--radius); font-size:.9rem; font-weight:300; color:var(--silver); line-height:1.65; }
     .api-note a { color:var(--gold); text-decoration:none; }
     .api-note a:hover { text-decoration:underline; }
+    .api-note code { font-family:var(--fm); font-size:11px; background:rgba(200,169,110,.12); border:1px solid rgba(200,169,110,.25); border-radius:5px; padding:2px 7px; color:var(--gold); }
 
-    /* ── Status ─────────────────────────────────────── */
+    /* Status */
     #status { margin:10px 16px 0; padding:11px 18px; border-radius:10px; font-family:var(--fm); font-size:11px; letter-spacing:.06em; display:none; }
-    #status.success { display:block; background:rgba(74,200,110,.1); border:1px solid rgba(74,200,110,.25); color:#74c87a; }
+    #status.success { display:block; background:var(--green-bg); border:1px solid var(--green-b); color:#74c87a; }
     #status.error   { display:block; background:rgba(255,100,80,.1); border:1px solid rgba(255,100,80,.25); color:#ff8070; }
     #status.info    { display:block; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); color:var(--accent); }
 
-    /* ── Install banner ─────────────────────────────── */
-    #install-banner {
-      display:none; margin:10px 16px 0; padding:15px 18px;
-      background:linear-gradient(135deg,rgba(74,158,255,.12),rgba(200,169,110,.08));
-      border:1px solid rgba(74,158,255,.25); border-radius:var(--radius);
-    }
+    /* Install */
+    #install-banner { display:none; margin:10px 16px 0; padding:15px 18px; background:linear-gradient(135deg,rgba(74,158,255,.12),rgba(200,169,110,.08)); border:1px solid rgba(74,158,255,.25); border-radius:var(--radius); }
     #install-banner p { font-size:.94rem; font-weight:300; color:var(--silver); margin-bottom:10px; }
     .ib-btns { display:flex; gap:10px; }
+    .btn-gold  { padding:9px 18px; background:var(--gold); color:var(--space); border:none; border-radius:8px; font-family:var(--fm); font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
     .btn-ghost { padding:9px 16px; background:transparent; color:var(--dim); border:1px solid var(--border); border-radius:8px; font-family:var(--fm); font-size:11px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
 
-    /* ── Nav ────────────────────────────────────────── */
+    /* Nav */
     nav { position:fixed; bottom:0; left:0; right:0; z-index:100; display:flex; justify-content:center; padding:0 16px env(safe-area-inset-bottom,14px); pointer-events:none; }
     .nav-pill { pointer-events:all; display:flex; gap:2px; background:rgba(11,20,39,.92); border:1px solid var(--border); border-radius:100px; padding:6px; backdrop-filter:blur(20px); box-shadow:0 8px 40px rgba(0,0,20,.65); margin-bottom:12px; }
-    .nav-btn { padding:8px 16px; border:none; border-radius:100px; background:transparent; color:var(--dim); font-family:var(--fm); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
+    .nav-btn { padding:9px 20px; border:none; border-radius:100px; background:transparent; color:var(--dim); font-family:var(--fm); font-size:11px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
     .nav-btn.active { background:var(--gold-glow); color:var(--gold); border:1px solid rgba(200,169,110,.3); }
     .nav-btn:not(.active):hover { color:var(--silver); }
 
     @media(min-width:480px){
-      #sk-wrap,#sk-info,#media-wrap,#info,#settings,
-      #install-banner,.api-note { margin-left:24px; margin-right:24px; }
-      .search-panel,#search-results { margin-left:24px; margin-right:24px; }
+      #sk-wrap,#sk-info,#media-wrap,#info,#settings,#install-banner,.api-note { margin-left:24px; margin-right:24px; }
       #strip-scroll { padding-left:24px; padding-right:24px; }
     }
   </style>
@@ -309,17 +199,15 @@
 <body>
 
 <div id="stars"></div>
-
 <div id="app">
 
   <header>
-    <div class="wordmark">APOD</div>
+    <div class="wordmark">NASA · APOD · Weltraumbild des Tages</div>
     <h1>Astronomy <span>Picture</span> of the Day</h1>
   </header>
 
-  <!-- Install -->
   <div id="install-banner">
-    <p>Installiere die App für tägliche Erinnerungen – auch offline verfügbar.</p>
+    <p>Installiere die App für tägliche Erinnerungen – auch offline.</p>
     <div class="ib-btns">
       <button class="btn-gold" id="install-btn">Installieren</button>
       <button class="btn-ghost" id="dismiss-install">Später</button>
@@ -328,125 +216,83 @@
 
   <div id="status"></div>
 
-  <!-- ═══ TAB: BILD ══════════════════════════════════════ -->
+  <!-- ═══ BILD ═══ -->
   <div class="tab active" id="tab-bild">
 
-    <!-- Date strip -->
     <div id="strip-wrap">
-      <button class="strip-nav" id="strip-prev" title="Vorheriger Tag">‹</button>
+      <button class="strip-nav" id="strip-prev">‹</button>
       <div id="strip-scroll"></div>
-      <button class="strip-nav" id="strip-next" title="Nächster Tag">›</button>
+      <button class="strip-nav" id="strip-next">›</button>
     </div>
 
-    <!-- Skeleton -->
     <div id="sk-wrap"><div class="skeleton sk-img"></div></div>
     <div id="sk-info">
-      <div class="skeleton sk-title"></div>
-      <div class="skeleton sk-sub"></div>
-      <div class="skeleton sk-line"></div>
-      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-title"></div><div class="skeleton sk-sub"></div>
+      <div class="skeleton sk-line"></div><div class="skeleton sk-line"></div>
       <div class="skeleton sk-line s"></div>
     </div>
 
-    <!-- Media -->
     <div id="media-wrap">
       <img id="apod-img" alt="APOD" loading="lazy" />
       <div id="apod-video-wrap"><iframe id="apod-iframe" allowfullscreen></iframe></div>
       <div class="img-overlay"></div>
     </div>
 
-    <!-- Info -->
     <div id="info">
+      <div class="lang-badge" id="lang-badge">🇺🇸 Englisch</div>
       <div id="apod-title"></div>
       <div id="apod-meta"></div>
-      <div id="apod-explanation"></div>
+      <div id="apod-text"></div>
       <button id="read-more-btn">Mehr anzeigen ↓</button>
+
+      <!-- Object chips -->
+      <div id="objects-wrap">
+        <div class="obj-header">Objekte im Bild</div>
+        <div id="obj-chips"></div>
+        <div id="obj-detail"></div>
+      </div>
+
+      <div id="de-status"></div>
+      <div id="de-link-row">
+        <span class="de-src">Quelle: starobserver.org</span>
+        <a id="de-link" href="#" target="_blank">Originalseite ↗</a>
+      </div>
     </div>
 
   </div>
 
-  <!-- ═══ TAB: SUCHE ═════════════════════════════════════ -->
-  <div class="tab" id="tab-suche">
-
-    <div class="search-panel">
-      <div class="panel-title">Stichwortsuche</div>
-      <div class="search-row">
-        <input type="search" id="search-input" placeholder="z. B. Orion, Supernova, Saturn …" autocomplete="off" />
-        <button class="btn-gold" id="search-btn">Suchen</button>
-      </div>
-      <div class="search-filters">
-        <span class="filter-lbl">Zeitraum:</span>
-        <select id="scope-select">
-          <option value="100">Letzte 100 Tage</option>
-          <option value="365">Letztes Jahr</option>
-          <option value="year">Jahr wählen →</option>
-        </select>
-        <select id="year-select" style="display:none"></select>
-      </div>
-    </div>
-
-    <div id="search-results">
-      <div id="search-empty">Gib ein Stichwort ein und tippe auf „Suchen" 🔭</div>
-      <div id="search-spinner">
-        <div class="spin-ring"></div>
-        Lade APODs…
-      </div>
-      <div class="results-meta" id="results-meta"></div>
-      <div class="results-grid" id="results-grid"></div>
-    </div>
-
-  </div>
-
-  <!-- ═══ TAB: EINSTELLUNGEN ════════════════════════════ -->
+  <!-- ═══ EINSTELLUNGEN ═══ -->
   <div class="tab" id="tab-settings">
-
     <div id="settings">
       <div class="stg-title">Einstellungen</div>
-
       <div class="stg-row">
-        <div>
-          <div class="stg-lbl">Tägliche Erinnerung</div>
-          <div class="stg-sub" id="notif-txt">Tippe zum Aktivieren</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="notif-toggle" />
-          <span class="toggle-track"></span>
-        </label>
+        <div><div class="stg-lbl">Tägliche Erinnerung</div><div class="stg-sub" id="notif-txt">Tippe zum Aktivieren</div></div>
+        <label class="toggle"><input type="checkbox" id="notif-toggle" /><span class="toggle-track"></span></label>
       </div>
-
       <div class="stg-row">
-        <div>
-          <div class="stg-lbl">Uhrzeit</div>
-          <div class="stg-sub">Täglich zu dieser Zeit</div>
-        </div>
+        <div><div class="stg-lbl">Uhrzeit</div><div class="stg-sub">Täglich zu dieser Zeit</div></div>
         <input type="time" id="reminder-time" value="20:00" />
       </div>
-
       <div class="stg-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <div>
-          <div class="stg-lbl">NASA API-Schlüssel</div>
-          <div class="stg-sub">DEMO_KEY: 30/h · Eigener Key: unbegrenzt</div>
-        </div>
+        <div><div class="stg-lbl">NASA API-Schlüssel</div><div class="stg-sub">Leer lassen → Demo-Schlüssel wird genutzt</div></div>
         <div class="api-key-row">
-          <input type="text" id="api-key-input" placeholder="Leer lassen = DEMO_KEY" maxlength="40" />
+          <input type="text" id="api-key-input" placeholder="Eigener API-Key (optional)" maxlength="50" />
           <button class="btn-sm" id="save-api-btn">Speichern</button>
         </div>
       </div>
     </div>
-
     <div class="api-note">
-      🔑 Kostenlosen Key bei <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a> holen
+      Der Demo-Schlüssel lautet exakt <code>DEMO_KEY</code> (Großbuchstaben).<br><br>
+      🔑 Unbegrenzt kostenlos: <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a>
       → „Generate API Key" → E-Mail bestätigen.
     </div>
-
   </div>
 
-</div><!-- /app -->
+</div>
 
 <nav>
   <div class="nav-pill">
     <button class="nav-btn active" data-tab="bild">🌌 Bild</button>
-    <button class="nav-btn" data-tab="suche">🔍 Suche</button>
     <button class="nav-btn" data-tab="settings">⚙ Einstellungen</button>
   </div>
 </nav>
@@ -454,96 +300,303 @@
 <script>
 'use strict';
 
-/* ── Utils ───────────────────────────────────── */
+/* ── Utils ───────────────────────────────────────────── */
 const $ = id => document.getElementById(id);
 const ls = {
-  get: k => { try{return localStorage.getItem(k)}catch{return null} },
-  set: (k,v) => { try{localStorage.setItem(k,v)}catch{} },
+  get: k=>{try{return localStorage.getItem(k)}catch{return null}},
+  set: (k,v)=>{try{localStorage.setItem(k,v)}catch{}},
 };
 function todayStr(){ return new Date().toISOString().slice(0,10); }
-function addDays(dateStr, n){
-  const d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
-  return d.toISOString().slice(0,10);
-}
-function fmtShort(str){
-  const d=new Date(str+'T00:00:00');
-  return d.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
-}
-function fmtLong(str){
-  const d=new Date(str+'T00:00:00');
-  return d.toLocaleDateString('de-DE',{year:'numeric',month:'long',day:'numeric'});
-}
+function addDays(ds,n){ const d=new Date(ds+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function fmtShort(s){ return new Date(s+'T00:00:00').toLocaleDateString('de-DE',{day:'numeric',month:'short'}); }
+function fmtLong(s) { return new Date(s+'T00:00:00').toLocaleDateString('de-DE',{year:'numeric',month:'long',day:'numeric'}); }
+function fmtTime(d) { return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
 function showStatus(msg,type='info'){
   const el=$('status'); el.textContent=msg; el.className=type;
   clearTimeout(el._t);
-  if(type!=='error') el._t=setTimeout(()=>el.style.display='none',4200);
+  if(type!=='error') el._t=setTimeout(()=>el.style.display='none',4500);
+}
+function getApiKey(){
+  const k=(ls.get('nasa-api-key')||'').trim();
+  if(!k) return 'DEMO_KEY';
+  // Fix common typos: "Demo_key" variants
+  if(/^demo/i.test(k) && k!=='DEMO_KEY') return 'DEMO_KEY';
+  return k;
 }
 
-/* ── Cache ───────────────────────────────────── */
+/* ── Cache ───────────────────────────────────────────── */
 function saveApod(d){ if(d?.date) ls.set('a:'+d.date,JSON.stringify(d)); }
 function loadApod(date){ const s=ls.get('a:'+date); return s?JSON.parse(s):null; }
 function saveRange(arr){ arr.forEach(saveApod); }
-function rangeFromCache(start,end){
-  const out=[]; let d=new Date(start+'T00:00:00'); const e=new Date(end+'T00:00:00');
-  while(d<=e){
-    const ds=d.toISOString().slice(0,10); const c=loadApod(ds);
-    if(!c) return null; out.push(c); d.setDate(d.getDate()+1);
-  }
-  return out;
-}
 
-/* ── State ───────────────────────────────────── */
+/* ── State ───────────────────────────────────────────── */
 let currentDate = todayStr();
 let stripApods  = [];
-const STRIP_N   = 14;
+let detectedObjs= []; // objects found in current APOD
+const STRIP_N   = 5;
 const APOD_MIN  = '1995-06-16';
 
-/* ── API ─────────────────────────────────────── */
-function apiKey(){ return ls.get('nasa-api-key')||'DEMO_KEY'; }
-
-async function apiFetch(date){
-  const cached=loadApod(date); if(cached) return cached;
-  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey()}&date=${date}&thumbs=true`);
-  if(!r.ok) throw new Error('API '+r.status);
-  const data=await r.json(); saveApod(data); return data;
+/* ── NASA API ────────────────────────────────────────── */
+async function nasaFetch(date){
+  const c=loadApod(date); if(c) return c;
+  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${getApiKey()}&date=${date}&thumbs=true`);
+  if(!r.ok) throw new Error('NASA API '+r.status+' – API-Key prüfen');
+  const d=await r.json(); saveApod(d); return d;
 }
-
-async function apiRange(start,end){
-  const cached=rangeFromCache(start,end); if(cached) return cached;
-  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey()}&start_date=${start}&end_date=${end}&thumbs=true`);
-  if(!r.ok) throw new Error('API '+r.status);
+async function nasaRange(start,end){
+  let d=new Date(start+'T00:00:00'); const e=new Date(end+'T00:00:00'); const out=[];
+  let allCached=true;
+  while(d<=e){ const ds=d.toISOString().slice(0,10); const c=loadApod(ds); if(c) out.push(c); else {allCached=false;break;} d.setDate(d.getDate()+1); }
+  if(allCached&&out.length) return out;
+  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${getApiKey()}&start_date=${start}&end_date=${end}&thumbs=true`);
+  if(!r.ok) throw new Error('NASA API '+r.status);
   const data=await r.json(); saveRange(data); return data;
 }
 
-/* ── Stars ───────────────────────────────────── */
+/* ── starobserver.org German text ────────────────────── */
+function starUrl(date){
+  const[y,m,d]=date.split('-');
+  return `https://www.starobserver.org/ap${y.slice(2)}${m}${d}/`;
+}
+async function fetchGerman(date){
+  const ck='de:'+date; const cached=ls.get(ck); if(cached) return JSON.parse(cached);
+  const target=starUrl(date);
+  const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
+  if(!res.ok) throw new Error('Proxy '+res.status);
+  const json=await res.json(); const html=json.contents;
+  if(!html) throw new Error('Leer');
+  // Validate: check "Zur Originalseite" link matches date
+  const slug='ap'+date.replace(/-/g,'').slice(2)+'.html';
+  if(!html.includes(slug)) throw new Error('Datum stimmt nicht überein');
+  // Parse title
+  const tm=html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const title=tm?tm[1].replace(/<[^>]+>/g,'').trim():'';
+  // Parse body paragraphs between </strong> and "Zur Originalseite"
+  const bs=html.indexOf('</strong>'); const be=html.indexOf('Zur Originalseite');
+  if(bs<0||be<0) throw new Error('Textblock nicht gefunden');
+  const pMatches=[...html.slice(bs,be).matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+  const paragraphs=pMatches.map(m=>m[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()).filter(p=>p.length>20);
+  const result={title,text:paragraphs.join('\n\n'),url:target,date};
+  ls.set(ck,JSON.stringify(result));
+  return result;
+}
+
+/* ══════════════════════════════════════════════════════
+   OBJECT DETECTION & CHIPS
+   ══════════════════════════════════════════════════════ */
+function detectObjects(title, text){
+  const src=(title+' '+text).replace(/<[^>]+>/g,' ');
+  const out=[], seen=new Set();
+  const add=o=>{ if(!seen.has(o.id)){seen.add(o.id);out.push(o);} };
+
+  // Messier M1–M110
+  for(const m of src.matchAll(/\bM\s?(\d{1,3})\b/g)){
+    const n=parseInt(m[1]); if(n>=1&&n<=110) add({type:'dso',id:'M '+n,label:'M '+n});
+  }
+  // NGC 1–7840
+  for(const m of src.matchAll(/\bNGC\s?(\d{1,4})\b/gi)){
+    const n=parseInt(m[1]); if(n>=1&&n<=7840) add({type:'dso',id:'NGC '+n,label:'NGC '+n});
+  }
+  // IC 1–5373
+  for(const m of src.matchAll(/\bIC\s?(\d{1,4})\b/g)){
+    const n=parseInt(m[1]); if(n>=1&&n<=5373) add({type:'dso',id:'IC '+n,label:'IC '+n});
+  }
+
+  // Planets (English + German names)
+  const PLANETS=[
+    {pat:/\b(Mercury|Merkur)\b/i,  body:'Mercury', label:'Merkur'},
+    {pat:/\bVenus\b/i,             body:'Venus',   label:'Venus'},
+    {pat:/\bMars\b/i,              body:'Mars',    label:'Mars'},
+    {pat:/\bJupiter\b/i,           body:'Jupiter', label:'Jupiter'},
+    {pat:/\bSaturn\b/i,            body:'Saturn',  label:'Saturn'},
+    {pat:/\bUranus\b/i,            body:'Uranus',  label:'Uranus'},
+    {pat:/\b(Neptune|Neptun)\b/i,  body:'Neptune', label:'Neptun'},
+  ];
+  for(const p of PLANETS){
+    if(p.pat.test(src)) add({type:'planet',id:p.body,label:p.label,body:p.body});
+  }
+
+  // Moon
+  if(/\b(Moon|Mond)\b/i.test(src)) add({type:'moon',id:'Moon',label:'Mond',body:'Moon'});
+
+  // Sun → SOHO/NASA solar link
+  if(/\b(Sun|Sonne|Solar|solar)\b/.test(src)) add({type:'sun',id:'Sun',label:'Sonne'});
+
+  return out;
+}
+
+function simbadUrl(id){
+  // e.g. "M 31" → https://simbad.u-strasbg.fr/simbad/sim-id?Ident=M+31
+  return 'https://simbad.u-strasbg.fr/simbad/sim-id?Ident='+id.replace(/ /g,'+');
+}
+
+function renderObjects(objects){
+  const wrap=$('objects-wrap'), chips=$('obj-chips'), detail=$('obj-detail');
+  if(!objects.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  chips.innerHTML='';
+  detail.innerHTML='';
+
+  objects.forEach(obj=>{
+    const chip=document.createElement('button');
+    chip.className='chip chip-'+obj.type;
+    chip.textContent=obj.label;
+
+    if(obj.type==='dso'){
+      chip.title='SIMBAD-Datenbank öffnen';
+      chip.addEventListener('click',()=>window.open(simbadUrl(obj.id),'_blank'));
+    } else if(obj.type==='sun'){
+      chip.title='SOHO Sonnenbeobachtung öffnen';
+      chip.addEventListener('click',()=>window.open('https://soho.nascom.nasa.gov/data/realtime-images.html','_blank'));
+    } else {
+      // planet or moon
+      chip.addEventListener('click',()=>toggleVisibility(chip,obj,detail));
+    }
+    chips.appendChild(chip);
+  });
+}
+
+function updateObjects(title, text){
+  const newObjs=detectObjects(title,text);
+  const seen=new Set(detectedObjs.map(o=>o.id));
+  for(const o of newObjs) if(!seen.has(o.id)){ detectedObjs.push(o); seen.add(o.id); }
+  renderObjects(detectedObjs);
+}
+
+/* ── Planet / Moon visibility ────────────────────────── */
+// Observer: Freudenstadt, Baden-Württemberg
+const OBS = { lat:48.46, lon:8.41, alt:500 };
+const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+let astroEngineLoading = false;
+function loadAstroEngine(){
+  return new Promise(resolve=>{
+    if(window.Astronomy){ resolve(true); return; }
+    if(astroEngineLoading){ // wait for existing load
+      const poll=setInterval(()=>{ if(window.Astronomy){ clearInterval(poll); resolve(true); } },100);
+      setTimeout(()=>{ clearInterval(poll); resolve(!!window.Astronomy); },8000);
+      return;
+    }
+    astroEngineLoading=true;
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/astronomy-engine@2/astronomy.browser.min.js';
+    s.onload=()=>{ astroEngineLoading=false; resolve(true); };
+    s.onerror=()=>{ astroEngineLoading=false; resolve(false); };
+    document.head.appendChild(s);
+  });
+}
+
+async function toggleVisibility(chip, obj, detail){
+  if(chip.classList.contains('active')){
+    chip.classList.remove('active');
+    detail.innerHTML=''; detail.style.display='none';
+    return;
+  }
+  document.querySelectorAll('.chip-planet.active,.chip-moon.active').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  detail.style.display='block';
+  detail.innerHTML='<div class="vis-loading"><div class="mini-spin"></div>Berechne Sichtbarkeit…</div>';
+  const html=await computeVisibility(obj.body,obj.label);
+  detail.innerHTML=`<div class="vis-card">${html}</div>`;
+}
+
+async function computeVisibility(bodyName, displayName){
+  const ok=await loadAstroEngine();
+  if(!ok) return `<span class="vis-unavail">${displayName}: Bibliothek nicht verfügbar (ggf. offline).</span>`;
+  try{
+    const obs=new Astronomy.Observer(OBS.lat,OBS.lon,OBS.alt);
+    const now=new Date();
+    return bodyName==='Moon' ? getMoonHtml(obs,now) : getPlanetHtml(obs,now,bodyName,displayName);
+  } catch(e){
+    return `<span class="vis-unavail">Berechnungsfehler: ${e.message}</span>`;
+  }
+}
+
+function getPlanetHtml(obs, now, bodyName, displayName){
+  const elong=Astronomy.AngleFromSun(bodyName,now);
+
+  if(elong<15){
+    return `🌞 <strong>${displayName}</strong> steht in <strong>Sonnennähe</strong> und ist derzeit nicht beobachtbar.`;
+  }
+
+  // Morning or evening? Compare RA of planet vs. Sun
+  const sunEq =Astronomy.Equator('Sun',   now, obs, true, true);
+  const bodyEq=Astronomy.Equator(bodyName,now, obs, true, true);
+  let raDiff=bodyEq.ra-sunEq.ra;
+  if(raDiff<-12) raDiff+=24;
+  if(raDiff> 12) raDiff-=24;
+  const isEvening=raDiff>0;
+
+  // Rise & set (search up to 2 days ahead to cover edge cases)
+  const rise=Astronomy.SearchRiseSet(bodyName,obs,+1,now,2);
+  const set =Astronomy.SearchRiseSet(bodyName,obs,-1,now,2);
+
+  // How many months still visible (elongation ≥ 15°)?
+  let lastVisibleMonth=null;
+  for(let m=1;m<=12;m++){
+    const fd=new Date(now); fd.setMonth(fd.getMonth()+m);
+    if(Astronomy.AngleFromSun(bodyName,fd)>=15) lastVisibleMonth=MONTH_NAMES[fd.getMonth()];
+    else break;
+  }
+
+  const skyIcon =isEvening?'🌆':'🌅';
+  const skyLabel=isEvening?'Abendhimmel':'Morgenhimmel';
+
+  let rows='';
+  if(rise) rows+=`<span class="vis-tag">🌅 Aufgang <b>${fmtTime(rise.date)}</b> Uhr</span>`;
+  if(set)  rows+=`<span class="vis-tag">🌇 Untergang <b>${fmtTime(set.date)}</b> Uhr</span>`;
+  if(lastVisibleMonth) rows+=`<span class="vis-tag">📅 Sichtbar bis <b>~${lastVisibleMonth}</b></span>`;
+
+  return `${skyIcon} <strong>${displayName}</strong> am <strong>${skyLabel}</strong>
+          <div class="vis-row">${rows}</div>`;
+}
+
+function getMoonHtml(obs, now){
+  const phase=Astronomy.MoonPhase(now); // 0–360°
+  const illum=Astronomy.Illumination('Moon',now);
+  const pct=Math.round(illum.phase_fraction*100);
+
+  const PHASES=[
+    [22.5,'🌑 Neumond'],[67.5,'🌒 Zunehmende Sichel'],
+    [112.5,'🌓 Erstes Viertel'],[157.5,'🌔 Zunehmender Mond'],
+    [202.5,'🌕 Vollmond'],[247.5,'🌖 Abnehmender Mond'],
+    [292.5,'🌗 Letztes Viertel'],[337.5,'🌘 Abnehmende Sichel'],
+    [360,'🌑 Neumond'],
+  ];
+  const phaseName=(PHASES.find(([lim])=>phase<lim)||PHASES[7])[1];
+
+  const rise=Astronomy.SearchRiseSet('Moon',obs,+1,now,2);
+  const set =Astronomy.SearchRiseSet('Moon',obs,-1,now,2);
+
+  let rows=`<span class="vis-tag">💡 <b>${pct}%</b> beleuchtet</span>`;
+  if(rise) rows+=`<span class="vis-tag">🌅 Aufgang <b>${fmtTime(rise.date)}</b> Uhr</span>`;
+  if(set)  rows+=`<span class="vis-tag">🌇 Untergang <b>${fmtTime(set.date)}</b> Uhr</span>`;
+
+  return `<strong>${phaseName}</strong><div class="vis-row">${rows}</div>`;
+}
+
+/* ── Stars ───────────────────────────────────────────── */
 (()=>{
   const c=$('stars');
   for(let i=0;i<180;i++){
     const s=document.createElement('div'); s.className='star';
     const sz=Math.random()*2.2+0.3;
-    Object.assign(s.style,{
-      width:sz+'px',height:sz+'px',
-      top:Math.random()*100+'%',left:Math.random()*100+'%',
-      '--dur':(Math.random()*5+2).toFixed(1)+'s',
-      '--min':(Math.random()*0.3).toFixed(2),
-      '--max':(Math.random()*0.7+0.3).toFixed(2),
-      animationDelay:(Math.random()*5)+'s',
-    });
+    Object.assign(s.style,{width:sz+'px',height:sz+'px',top:Math.random()*100+'%',left:Math.random()*100+'%','--dur':(Math.random()*5+2).toFixed(1)+'s','--min':(Math.random()*.3).toFixed(2),'--max':(Math.random()*.7+.3).toFixed(2),animationDelay:(Math.random()*5)+'s'});
     c.appendChild(s);
   }
 })();
 
-/* ── Service Worker ──────────────────────────── */
+/* ── Service Worker ──────────────────────────────────── */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js')
     .then(r=>{ window._sw=r; scheduleAlarm(); }).catch(()=>{});
 }
 
-/* ── PWA Install ─────────────────────────────── */
+/* ── PWA Install ─────────────────────────────────────── */
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault(); deferredPrompt=e;
-  if(!ls.get('ib-dismissed')) $('install-banner').style.display='block';
+  if(!ls.get('ib-off')) $('install-banner').style.display='block';
 });
 $('install-btn').addEventListener('click',async()=>{
   if(!deferredPrompt) return;
@@ -552,11 +605,9 @@ $('install-btn').addEventListener('click',async()=>{
   deferredPrompt=null; $('install-banner').style.display='none';
   if(outcome==='accepted') showStatus('App installiert! 🎉','success');
 });
-$('dismiss-install').addEventListener('click',()=>{
-  ls.set('ib-dismissed','1'); $('install-banner').style.display='none';
-});
+$('dismiss-install').addEventListener('click',()=>{ ls.set('ib-off','1'); $('install-banner').style.display='none'; });
 
-/* ── Tab navigation ──────────────────────────── */
+/* ── Tabs ────────────────────────────────────────────── */
 document.querySelectorAll('.nav-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const t=btn.dataset.tab;
@@ -566,81 +617,45 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
   });
 });
 
-/* ── Strip ───────────────────────────────────── */
-function showStripSkeletons(){
-  const sc=$('strip-scroll'); sc.innerHTML='';
-  for(let i=0;i<STRIP_N;i++)
-    sc.innerHTML+=`<div class="s-skel"><div class="skeleton sa"></div><div class="skeleton sb"></div></div>`;
-}
+/* ── Strip ───────────────────────────────────────────── */
+function svgPlay(){ return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 50'><rect fill='%230f1e3c' width='74' height='50'/><text x='37' y='32' text-anchor='middle' font-size='22' fill='%23c8a96e'>▶</text></svg>`; }
 
+function showStripSkel(){
+  const sc=$('strip-scroll'); sc.innerHTML='';
+  for(let i=0;i<STRIP_N;i++) sc.innerHTML+=`<div class="s-skel"><div class="skeleton sa"></div><div class="skeleton sb"></div></div>`;
+}
 function renderStrip(apods){
   const sc=$('strip-scroll'); sc.innerHTML='';
-  // newest first
   [...apods].sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>{
     const el=document.createElement('div');
     el.className='strip-item'+(d.date===currentDate?' active':'');
     el.dataset.date=d.date;
-    const thumb=d.media_type==='video'
-      ? (d.thumbnail_url||svgPlay())
-      : (d.url||'');
-    el.innerHTML=`<img class="strip-thumb" src="${thumb}" alt="" loading="lazy"
-      onerror="this.src='${svgPlay()}'" />
-      <div class="strip-label">${fmtShort(d.date)}</div>`;
+    const th=d.media_type==='video'?(d.thumbnail_url||svgPlay()):(d.url||'');
+    el.innerHTML=`<img class="strip-thumb" src="${th}" alt="" loading="lazy" onerror="this.src='${svgPlay()}'" /><div class="strip-label">${fmtShort(d.date)}</div>`;
     el.addEventListener('click',()=>selectDate(d.date));
     sc.appendChild(el);
   });
   centerActive();
 }
+function updateStripActive(){ document.querySelectorAll('.strip-item').forEach(el=>el.classList.toggle('active',el.dataset.date===currentDate)); centerActive(); }
+function centerActive(){ const a=$('strip-scroll').querySelector('.strip-item.active'); if(a) setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}),60); }
 
-function svgPlay(){
-  return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 46'><rect fill='%230f1e3c' width='68' height='46'/><text x='34' y='29' text-anchor='middle' font-size='20' fill='%23c8a96e'>▶</text></svg>`;
-}
-
-function updateStripActive(){
-  document.querySelectorAll('.strip-item').forEach(el=>{
-    el.classList.toggle('active',el.dataset.date===currentDate);
-  });
-  centerActive();
-}
-
-function centerActive(){
-  const a=$('strip-scroll').querySelector('.strip-item.active');
-  if(a) setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}),60);
-}
-
-$('strip-prev').addEventListener('click',()=>{
-  const prev=addDays(currentDate,-1);
-  if(prev>=APOD_MIN) selectDate(prev);
-});
-$('strip-next').addEventListener('click',()=>{
-  const next=addDays(currentDate,1);
-  if(next<=todayStr()) selectDate(next);
-});
+$('strip-prev').addEventListener('click',()=>{ const p=addDays(currentDate,-1); if(p>=APOD_MIN) selectDate(p); });
+$('strip-next').addEventListener('click',()=>{ const n=addDays(currentDate,+1); if(n<=todayStr()) selectDate(n); });
 
 async function loadStrip(){
-  showStripSkeletons();
+  showStripSkel();
   const end=todayStr(), start=addDays(end,-(STRIP_N-1));
-  try{
-    stripApods=await apiRange(start,end);
-    renderStrip(stripApods);
-  } catch(e){
-    showStatus('Strip-Fehler: '+e.message,'error');
-    $('strip-scroll').innerHTML='';
-  }
+  try{ stripApods=await nasaRange(start,end); renderStrip(stripApods); }
+  catch(e){ showStatus('Vorschau-Fehler: '+e.message,'error'); $('strip-scroll').innerHTML=''; }
+}
+async function extendStrip(date){
+  const end=date<=todayStr()?date:todayStr(), start=addDays(end,-(STRIP_N-1));
+  try{ stripApods=await nasaRange(start,end); renderStrip(stripApods); } catch{}
 }
 
-async function extendStripTo(date){
-  // If date is outside current strip window, reload strip centered around date
-  const end = date<=todayStr() ? date : todayStr();
-  const start = addDays(end,-(STRIP_N-1));
-  try{
-    stripApods=await apiRange(start,end);
-    renderStrip(stripApods);
-  } catch{}
-}
-
-/* ── Main APOD render ────────────────────────── */
-const MAX_EXP=430;
+/* ── Main render ─────────────────────────────────────── */
+const MAX_EXP=480;
 
 function showSkeleton(on){
   $('sk-wrap').style.display=on?'block':'none';
@@ -648,182 +663,120 @@ function showSkeleton(on){
   $('media-wrap').style.display=on?'none':'block';
   $('info').style.display=on?'none':'block';
 }
+function setExplanation(text){
+  const btn=$('read-more-btn');
+  if(text.length>MAX_EXP){
+    $('apod-text').textContent=text.slice(0,MAX_EXP)+'…';
+    btn.style.display='inline-block';
+    btn.onclick=()=>{ $('apod-text').textContent=text; btn.style.display='none'; };
+  } else {
+    $('apod-text').textContent=text; btn.style.display='none';
+  }
+}
 
 async function selectDate(date){
-  currentDate=date;
-  updateStripActive();
-  // Is date outside strip window?
-  const inStrip=stripApods.some(a=>a.date===date);
-  if(!inStrip) await extendStripTo(date);
+  currentDate=date; updateStripActive();
+  if(!stripApods.some(a=>a.date===date)) await extendStrip(date);
   await renderMain(date);
 }
 
 async function renderMain(date){
   showSkeleton(true);
+  // Reset German status + objects
+  $('de-status').className=''; $('de-status').innerHTML='';
+  $('de-link-row').style.display='none';
+  $('lang-badge').textContent='🇺🇸 Englisch';
+  detectedObjs=[]; $('objects-wrap').style.display='none';
+  $('obj-chips').innerHTML=''; $('obj-detail').innerHTML='';
+
   try{
-    const d=await apiFetch(date);
+    const d=await nasaFetch(date);
     showSkeleton(false);
+
+    // Media
     const img=$('apod-img'), vw=$('apod-video-wrap');
     if(d.media_type==='video'){
-      if(d.thumbnail_url){
-        img.src=d.thumbnail_url; img.style.display='block'; img.style.cursor='pointer';
-        img.title='Video öffnen'; img.onclick=()=>window.open(d.url,'_blank');
-        vw.style.display='none';
-      } else {
-        img.style.display='none'; vw.style.display='block';
-        $('apod-iframe').src=d.url;
-      }
+      if(d.thumbnail_url){ img.src=d.thumbnail_url; img.style.display='block'; img.style.cursor='pointer'; img.title='Video öffnen'; img.onclick=()=>window.open(d.url,'_blank'); vw.style.display='none'; }
+      else{ img.style.display='none'; vw.style.display='block'; $('apod-iframe').src=d.url; }
     } else {
-      img.src=d.url; img.style.display='block';
-      img.style.cursor=''; img.title=''; img.onclick=null;
-      vw.style.display='none';
+      img.src=d.url; img.style.display='block'; img.style.cursor=''; img.title=''; img.onclick=null; vw.style.display='none';
     }
+
+    // English text
     $('apod-title').textContent=d.title||'—';
     $('apod-meta').textContent=(d.copyright?'© '+d.copyright.trim()+' · ':'')+fmtLong(d.date);
-    const exp=d.explanation||'';
-    const btn=$('read-more-btn');
-    if(exp.length>MAX_EXP){
-      $('apod-explanation').textContent=exp.slice(0,MAX_EXP)+'…';
-      btn.style.display='inline-block';
-      btn.onclick=()=>{ $('apod-explanation').textContent=exp; btn.style.display='none'; };
-    } else {
-      $('apod-explanation').textContent=exp; btn.style.display='none';
-    }
+    setExplanation(d.explanation||'');
+
+    // Detect objects from English text first
+    updateObjects(d.title||'', d.explanation||'');
+
+    // Load German translation
+    loadGerman(date, d);
+
   } catch(e){
     showSkeleton(false);
     showStatus('Fehler: '+e.message,'error');
-    const cached=loadApod(date);
-    if(cached){
+    const c=loadApod(date);
+    if(c){
       showStatus('Offline – gecachtes Bild','info');
-      $('apod-title').textContent=cached.title||'—';
-      $('apod-explanation').textContent=cached.explanation||'';
-      if(cached.url){ $('apod-img').src=cached.url; $('apod-img').style.display='block'; }
+      $('apod-title').textContent=c.title||'—';
+      setExplanation(c.explanation||'');
+      if(c.url){$('apod-img').src=c.url;$('apod-img').style.display='block';}
       $('media-wrap').style.display='block'; $('info').style.display='block';
+      updateObjects(c.title||'',c.explanation||'');
     }
   }
 }
 
-/* ── Search ──────────────────────────────────── */
-// Build year dropdown
-(()=>{
-  const sel=$('year-select');
-  const thisY=new Date().getFullYear();
-  for(let y=thisY;y>=1995;y--){
-    const o=document.createElement('option'); o.value=o.textContent=y; sel.appendChild(o);
-  }
-})();
-
-$('scope-select').addEventListener('change',function(){
-  $('year-select').style.display=this.value==='year'?'inline-block':'none';
-});
-
-async function doSearch(){
-  const kw=$('search-input').value.trim().toLowerCase();
-  if(!kw){ showStatus('Bitte ein Stichwort eingeben.','info'); return; }
-
-  const btn=$('search-btn'); btn.disabled=true; btn.textContent='…';
-  $('search-empty').style.display='none';
-  $('results-meta').style.display='none';
-  $('results-grid').innerHTML='';
-  $('search-spinner').style.display='block';
-
+async function loadGerman(date, nasaData){
+  const ds=$('de-status');
+  ds.className='loading'; ds.innerHTML='<div class="mini-spin"></div>Lade deutsche Übersetzung…';
   try{
-    let apods=[];
-    const scope=$('scope-select').value;
-    if(scope==='year'){
-      const y=$('year-select').value;
-      const start=y+'-01-01';
-      const end=y==new Date().getFullYear()?todayStr():y+'-12-31';
-      apods=await apiRange(start,end);
-    } else {
-      const days=parseInt(scope);
-      apods=await apiRange(addDays(todayStr(),-days),todayStr());
-    }
-
-    const words=kw.split(/\s+/).filter(Boolean);
-    const hits=apods.filter(d=>{
-      const hay=((d.title||'')+(d.explanation||'')).toLowerCase();
-      return words.every(w=>hay.includes(w));
-    });
-
-    $('search-spinner').style.display='none';
-    showResults(hits,kw,apods.length);
+    const de=await fetchGerman(date);
+    $('apod-title').textContent=de.title||nasaData.title;
+    setExplanation(de.text||nasaData.explanation||'');
+    $('lang-badge').textContent='🇩🇪 Deutsch';
+    ds.className=''; ds.innerHTML='';
+    $('de-link-row').style.display='flex';
+    $('de-link').href=de.url;
+    // Re-detect objects from German text (may find additional names)
+    updateObjects(de.title||'',de.text||'');
   } catch(e){
-    $('search-spinner').style.display='none';
-    showStatus('Suchfehler: '+e.message,'error');
-  } finally { btn.disabled=false; btn.textContent='Suchen'; }
-}
-
-function showResults(results,kw,total){
-  const grid=$('results-grid'), meta=$('results-meta');
-  grid.innerHTML='';
-  if(!results.length){
-    $('search-empty').style.display='block';
-    $('search-empty').innerHTML=`Keine Treffer für „<em>${kw}</em>"<br>in ${total} geprüften APODs.`;
-    return;
+    ds.className='warn'; ds.textContent='Deutsche Übersetzung nicht verfügbar – zeige Originaltext.';
   }
-  meta.style.display='block';
-  meta.textContent=`${results.length} Treffer in ${total} APODs`;
-  results.sort((a,b)=>b.date.localeCompare(a.date));
-  results.forEach((d,i)=>{
-    const card=document.createElement('div');
-    card.className='r-card'; card.style.animationDelay=(i*.04)+'s';
-    const thumb=d.media_type==='video'?(d.thumbnail_url||''):( d.url||'');
-    card.innerHTML=`
-      <img class="r-thumb" src="${thumb}" alt="" loading="lazy"
-        onerror="this.style.opacity='.3';this.style.background='var(--nebula)'" />
-      <div class="r-body">
-        <div class="r-date">${fmtShort(d.date)} ${new Date(d.date+'T00:00:00').getFullYear()}</div>
-        <div class="r-title">${d.title||'—'}</div>
-      </div>`;
-    card.addEventListener('click',()=>{
-      // Switch to Bild tab, load selected APOD
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-      $('tab-bild').classList.add('active');
-      document.querySelector('[data-tab="bild"]').classList.add('active');
-      selectDate(d.date);
-    });
-    grid.appendChild(card);
-  });
 }
 
-$('search-input').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
-$('search-btn').addEventListener('click',doSearch);
-
-/* ── Notifications ───────────────────────────── */
-const nToggle=$('notif-toggle'), rTime=$('reminder-time');
-function setNotifTxt(on){ $('notif-txt').textContent=on?'✓ Aktiviert':'Tippe zum Aktivieren'; }
-if(ls.get('notif-on')==='1'&&Notification.permission==='granted'){ nToggle.checked=true; setNotifTxt(true); }
-if(ls.get('alarm-time')) rTime.value=ls.get('alarm-time');
-
-nToggle.addEventListener('change',async()=>{
-  if(!nToggle.checked){ ls.set('notif-on','0'); setNotifTxt(false); showStatus('Erinnerungen deaktiviert.','info'); return; }
-  if(!('Notification' in window)){ showStatus('Nicht unterstützt.','error'); nToggle.checked=false; return; }
+/* ── Notifications ───────────────────────────────────── */
+const nT=$('notif-toggle'), rT=$('reminder-time');
+function setNTxt(on){ $('notif-txt').textContent=on?'✓ Aktiviert':'Tippe zum Aktivieren'; }
+if(ls.get('notif-on')==='1'&&Notification.permission==='granted'){nT.checked=true;setNTxt(true);}
+if(ls.get('alarm-time')) rT.value=ls.get('alarm-time');
+nT.addEventListener('change',async()=>{
+  if(!nT.checked){ls.set('notif-on','0');setNTxt(false);showStatus('Erinnerungen deaktiviert.','info');return;}
+  if(!('Notification' in window)){showStatus('Nicht unterstützt.','error');nT.checked=false;return;}
   const p=await Notification.requestPermission();
-  if(p==='granted'){ ls.set('notif-on','1'); setNotifTxt(true); scheduleAlarm(); showStatus('Erinnerungen aktiviert! 🌌','success'); }
-  else { nToggle.checked=false; showStatus('Berechtigung verweigert.','error'); }
+  if(p==='granted'){ls.set('notif-on','1');setNTxt(true);scheduleAlarm();showStatus('Erinnerungen aktiviert! 🌌','success');}
+  else{nT.checked=false;showStatus('Berechtigung verweigert.','error');}
 });
-rTime.addEventListener('change',()=>{
-  ls.set('alarm-time',rTime.value); scheduleAlarm();
-  showStatus('Erinnerung: '+rTime.value+' Uhr gespeichert.','success');
-});
+rT.addEventListener('change',()=>{ls.set('alarm-time',rT.value);scheduleAlarm();showStatus('Erinnerung: '+rT.value+' Uhr gespeichert.','success');});
 function scheduleAlarm(){
   if(ls.get('notif-on')!=='1'||Notification.permission!=='granted'||!window._sw?.active) return;
   const[h,m]=(ls.get('alarm-time')||'20:00').split(':').map(Number);
   window._sw.active.postMessage({type:'SCHEDULE_REMINDER',hour:h,minute:m});
 }
 
-/* ── API Key ─────────────────────────────────── */
+/* ── API Key ─────────────────────────────────────────── */
 $('save-api-btn').addEventListener('click',()=>{
-  const v=$('api-key-input').value.trim(); ls.set('nasa-api-key',v);
-  Object.keys(localStorage).filter(k=>k.startsWith('a:')).forEach(k=>localStorage.removeItem(k));
-  showStatus(v?'API-Key gespeichert.':'DEMO_KEY wird verwendet.','success');
-  setTimeout(()=>{ loadStrip(); renderMain(currentDate); },500);
+  let v=$('api-key-input').value.trim();
+  if(/^demo/i.test(v)&&v!=='DEMO_KEY') v='DEMO_KEY';
+  ls.set('nasa-api-key',v);
+  Object.keys(localStorage).filter(k=>k.startsWith('a:')||k.startsWith('de:')).forEach(k=>localStorage.removeItem(k));
+  showStatus('Schlüssel gespeichert: '+(v||'DEMO_KEY'),'success');
+  setTimeout(()=>{loadStrip();renderMain(currentDate);},500);
 });
 if(ls.get('nasa-api-key')) $('api-key-input').value=ls.get('nasa-api-key');
 
-/* ── Init ────────────────────────────────────── */
+/* ── Init ────────────────────────────────────────────── */
 showSkeleton(true);
 loadStrip();
 renderMain(currentDate);
