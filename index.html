@@ -375,8 +375,8 @@ function showStatus(msg,type='info'){
 function getApiKey(){
   const k=(ls.get('nasa-api-key')||'').trim();
   if(!k) return 'DEMO_KEY';
-  // Fix common typos: "Demo_key" variants
-  if(/^demo/i.test(k) && k!=='DEMO_KEY') return 'DEMO_KEY';
+  // Normalize any "demo..." variant → DEMO_KEY
+  if(/^demo/i.test(k)) return 'DEMO_KEY';
   return k;
 }
 
@@ -396,7 +396,11 @@ const APOD_MIN  = '1995-06-16';
 async function nasaFetch(date){
   const c=loadApod(date); if(c) return c;
   const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${getApiKey()}&date=${date}&thumbs=true`);
-  if(!r.ok) throw new Error('NASA API '+r.status+' – API-Key prüfen');
+  if(!r.ok){
+    if(r.status===403) throw new Error('403 – API-Key ungültig. Bitte DEMO_KEY (Unterstrich) oder eigenen Key eintragen.');
+    if(r.status===503) throw new Error('503 – NASA-Server vorübergehend nicht erreichbar. Bitte später erneut versuchen.');
+    throw new Error('NASA API '+r.status);
+  }
   const d=await r.json(); saveApod(d); return d;
 }
 async function nasaRange(start,end){
@@ -816,17 +820,101 @@ async function loadGerman(date, nasaData){
 
 /* ── Notifications ───────────────────────────────────── */
 const nT=$('notif-toggle'), rT=$('reminder-time');
-function setNTxt(on){ $('notif-txt').textContent=on?'✓ Aktiviert':'Tippe zum Aktivieren'; }
-if(ls.get('notif-on')==='1'&&Notification.permission==='granted'){nT.checked=true;setNTxt(true);}
+
+function setNTxt(state){
+  const el=$('notif-txt');
+  if(state==='on')      el.textContent='✓ Aktiviert';
+  else if(state==='denied') el.innerHTML='⚠ Blockiert – <u style="cursor:pointer" id="open-settings-link">Einstellungen öffnen</u>';
+  else                  el.textContent='Tippe zum Aktivieren';
+  // Re-attach link handler after innerHTML update
+  const lnk=document.getElementById('open-settings-link');
+  if(lnk) lnk.addEventListener('click', openSystemSettings);
+}
+
+function openSystemSettings(){
+  // On Android, we can't open system notification settings directly from a PWA.
+  // Best we can do: show a clear instruction overlay.
+  showNotifHelp();
+}
+
+function showNotifHelp(){
+  // Remove existing if any
+  const old=document.getElementById('notif-help'); if(old) old.remove();
+  const box=document.createElement('div');
+  box.id='notif-help';
+  box.style.cssText=`
+    position:fixed;inset:0;z-index:2000;
+    background:rgba(3,6,14,.94);backdrop-filter:blur(14px);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  `;
+  box.innerHTML=`
+    <div style="max-width:360px;background:var(--deep);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;font-family:var(--fm);">
+      <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Benachrichtigungen freischalten</div>
+      <div style="font-family:var(--fd);font-size:1rem;font-weight:300;color:var(--silver);line-height:1.75;margin-bottom:20px;">
+        Android hat die Berechtigung dauerhaft blockiert.<br><br>
+        So freischalten:<br>
+        <b style="color:var(--white)">1.</b> Android-<b style="color:var(--white)">Einstellungen</b> öffnen<br>
+        <b style="color:var(--white)">2.</b> → <b style="color:var(--white)">Apps</b> → <b style="color:var(--white)">APOD</b> (oder Chrome)<br>
+        <b style="color:var(--white)">3.</b> → <b style="color:var(--white)">Benachrichtigungen</b> → einschalten<br>
+        <b style="color:var(--white)">4.</b> App neu öffnen und hier nochmals aktivieren
+      </div>
+      <button onclick="document.getElementById('notif-help').remove()"
+        style="width:100%;padding:11px;background:var(--gold);color:var(--space);border:none;border-radius:9px;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">
+        Verstanden
+      </button>
+    </div>`;
+  document.body.appendChild(box);
+}
+
+// Init toggle state on load
+(function initNotifState(){
+  const perm='Notification' in window ? Notification.permission : 'unsupported';
+  if(perm==='granted' && ls.get('notif-on')==='1'){
+    nT.checked=true; setNTxt('on');
+  } else if(perm==='denied'){
+    nT.checked=false; nT.disabled=true; setNTxt('denied');
+  } else {
+    nT.checked=false; setNTxt('off');
+  }
+})();
+
 if(ls.get('alarm-time')) rT.value=ls.get('alarm-time');
-nT.addEventListener('change',async()=>{
-  if(!nT.checked){ls.set('notif-on','0');setNTxt(false);showStatus('Erinnerungen deaktiviert.','info');return;}
-  if(!('Notification' in window)){showStatus('Nicht unterstützt.','error');nT.checked=false;return;}
+
+nT.addEventListener('change', async ()=>{
+  if(!nT.checked){
+    ls.set('notif-on','0'); setNTxt('off');
+    showStatus('Erinnerungen deaktiviert.','info');
+    return;
+  }
+  if(!('Notification' in window)){
+    showStatus('Benachrichtigungen werden auf diesem Gerät nicht unterstützt.','error');
+    nT.checked=false; return;
+  }
+  // Already denied by system → can't re-request, show help
+  if(Notification.permission==='denied'){
+    nT.checked=false; nT.disabled=true; setNTxt('denied');
+    showNotifHelp(); return;
+  }
+  // Request permission
   const p=await Notification.requestPermission();
-  if(p==='granted'){ls.set('notif-on','1');setNTxt(true);scheduleAlarm();showStatus('Erinnerungen aktiviert! 🌌','success');}
-  else{nT.checked=false;showStatus('Berechtigung verweigert.','error');}
+  if(p==='granted'){
+    ls.set('notif-on','1'); setNTxt('on'); scheduleAlarm();
+    showStatus('Erinnerungen aktiviert! 🌌','success');
+  } else if(p==='denied'){
+    nT.checked=false; nT.disabled=true; setNTxt('denied');
+    showNotifHelp();
+  } else {
+    // 'default' – user dismissed dialog without choosing
+    nT.checked=false; setNTxt('off');
+    showStatus('Berechtigung nicht erteilt – bitte nochmals versuchen.','info');
+  }
 });
-rT.addEventListener('change',()=>{ls.set('alarm-time',rT.value);scheduleAlarm();showStatus('Erinnerung: '+rT.value+' Uhr gespeichert.','success');});
+
+rT.addEventListener('change',()=>{
+  ls.set('alarm-time',rT.value); scheduleAlarm();
+  showStatus('Erinnerung: '+rT.value+' Uhr gespeichert.','success');
+});
+
 function scheduleAlarm(){
   if(ls.get('notif-on')!=='1'||Notification.permission!=='granted'||!window._sw?.active) return;
   const[h,m]=(ls.get('alarm-time')||'20:00').split(':').map(Number);
@@ -884,8 +972,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); 
 /* ── API Key ─────────────────────────────────────────── */
 $('save-api-btn').addEventListener('click',()=>{
   let v=$('api-key-input').value.trim();
-  if(/^demo/i.test(v)&&v!=='DEMO_KEY') v='DEMO_KEY';
+  if(/^demo/i.test(v)) v='DEMO_KEY';
   ls.set('nasa-api-key',v);
+  $('api-key-input').value=v||'';
   Object.keys(localStorage).filter(k=>k.startsWith('a:')||k.startsWith('de:')).forEach(k=>localStorage.removeItem(k));
   showStatus('Schlüssel gespeichert: '+(v||'DEMO_KEY'),'success');
   setTimeout(()=>{loadStrip();renderMain(currentDate);},500);
