@@ -818,45 +818,37 @@ async function loadGerman(date, nasaData){
   }
 }
 
-/* ── Notifications ───────────────────────────────────── */
+/* ── Notifications & Periodic Background Sync ────────── */
 const nT=$('notif-toggle'), rT=$('reminder-time');
 
 function setNTxt(state){
   const el=$('notif-txt');
-  if(state==='on')      el.textContent='✓ Aktiviert';
-  else if(state==='denied') el.innerHTML='⚠ Blockiert – <u style="cursor:pointer" id="open-settings-link">Einstellungen öffnen</u>';
-  else                  el.textContent='Tippe zum Aktivieren';
-  // Re-attach link handler after innerHTML update
+  if(state==='on')
+    el.textContent='✓ Aktiviert – täglich ~'+rT.value+' Uhr';
+  else if(state==='denied')
+    el.innerHTML='⚠ Blockiert – <u style="cursor:pointer" id="open-settings-link">Anleitung anzeigen</u>';
+  else if(state==='unsupported')
+    el.textContent='Nicht unterstützt auf diesem Gerät';
+  else
+    el.textContent='Tippe zum Aktivieren';
   const lnk=document.getElementById('open-settings-link');
-  if(lnk) lnk.addEventListener('click', openSystemSettings);
-}
-
-function openSystemSettings(){
-  // On Android, we can't open system notification settings directly from a PWA.
-  // Best we can do: show a clear instruction overlay.
-  showNotifHelp();
+  if(lnk) lnk.addEventListener('click', showNotifHelp);
 }
 
 function showNotifHelp(){
-  // Remove existing if any
   const old=document.getElementById('notif-help'); if(old) old.remove();
   const box=document.createElement('div');
   box.id='notif-help';
-  box.style.cssText=`
-    position:fixed;inset:0;z-index:2000;
-    background:rgba(3,6,14,.94);backdrop-filter:blur(14px);
-    display:flex;align-items:center;justify-content:center;padding:24px;
-  `;
+  box.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(3,6,14,.94);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:24px;';
   box.innerHTML=`
     <div style="max-width:360px;background:var(--deep);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;font-family:var(--fm);">
       <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Benachrichtigungen freischalten</div>
       <div style="font-family:var(--fd);font-size:1rem;font-weight:300;color:var(--silver);line-height:1.75;margin-bottom:20px;">
-        Android hat die Berechtigung dauerhaft blockiert.<br><br>
-        So freischalten:<br>
+        Android hat die Berechtigung blockiert.<br><br>
         <b style="color:var(--white)">1.</b> Android-<b style="color:var(--white)">Einstellungen</b> öffnen<br>
-        <b style="color:var(--white)">2.</b> → <b style="color:var(--white)">Apps</b> → <b style="color:var(--white)">APOD</b> (oder Chrome)<br>
+        <b style="color:var(--white)">2.</b> → <b style="color:var(--white)">Apps</b> → <b style="color:var(--white)">APOD</b><br>
         <b style="color:var(--white)">3.</b> → <b style="color:var(--white)">Benachrichtigungen</b> → einschalten<br>
-        <b style="color:var(--white)">4.</b> App neu öffnen und hier nochmals aktivieren
+        <b style="color:var(--white)">4.</b> App neu öffnen und nochmals aktivieren
       </div>
       <button onclick="document.getElementById('notif-help').remove()"
         style="width:100%;padding:11px;background:var(--gold);color:var(--space);border:none;border-radius:9px;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">
@@ -866,60 +858,84 @@ function showNotifHelp(){
   document.body.appendChild(box);
 }
 
-// Init toggle state on load
-(function initNotifState(){
-  const perm='Notification' in window ? Notification.permission : 'unsupported';
-  if(perm==='granted' && ls.get('notif-on')==='1'){
-    nT.checked=true; setNTxt('on');
-  } else if(perm==='denied'){
-    nT.checked=false; nT.disabled=true; setNTxt('denied');
+// Periodic Background Sync helpers
+const hasPBS = 'serviceWorker' in navigator &&
+               'periodicSync' in ServiceWorkerRegistration.prototype;
+
+async function registerPeriodicSync(){
+  if(!hasPBS) return false;
+  try{
+    const status=await navigator.permissions.query({name:'periodic-background-sync'});
+    if(status.state==='denied') return false;
+    const reg=await navigator.serviceWorker.ready;
+    await reg.periodicSync.register('apod-daily',{minInterval:23*60*60*1000});
+    return true;
+  } catch(e){ console.warn('PBS register:',e); return false; }
+}
+
+async function unregisterPeriodicSync(){
+  if(!hasPBS) return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    await reg.periodicSync.unregister('apod-daily');
+  } catch(_){}
+}
+
+async function syncApiKeyToSW(){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.active?.postMessage({type:'SET_API_KEY', key:getApiKey()});
+  } catch(_){}
+}
+
+// Init on load
+(async function initNotifState(){
+  if(!('Notification' in window)){ nT.disabled=true; setNTxt('unsupported'); return; }
+  const perm=Notification.permission;
+  if(perm==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); return; }
+  if(ls.get('notif-on')==='1' && perm==='granted'){
+    nT.checked=true; setNTxt('on'); syncApiKeyToSW();
   } else {
-    nT.checked=false; setNTxt('off');
+    setNTxt('off');
   }
 })();
 
 if(ls.get('alarm-time')) rT.value=ls.get('alarm-time');
 
-nT.addEventListener('change', async ()=>{
+nT.addEventListener('change', async()=>{
   if(!nT.checked){
     ls.set('notif-on','0'); setNTxt('off');
+    await unregisterPeriodicSync();
     showStatus('Erinnerungen deaktiviert.','info');
     return;
   }
-  if(!('Notification' in window)){
-    showStatus('Benachrichtigungen werden auf diesem Gerät nicht unterstützt.','error');
-    nT.checked=false; return;
-  }
-  // Already denied by system → can't re-request, show help
-  if(Notification.permission==='denied'){
-    nT.checked=false; nT.disabled=true; setNTxt('denied');
-    showNotifHelp(); return;
-  }
-  // Request permission
-  const p=await Notification.requestPermission();
-  if(p==='granted'){
-    ls.set('notif-on','1'); setNTxt('on'); scheduleAlarm();
-    showStatus('Erinnerungen aktiviert! 🌌','success');
-  } else if(p==='denied'){
-    nT.checked=false; nT.disabled=true; setNTxt('denied');
-    showNotifHelp();
+  if(!('Notification' in window)){ nT.checked=false; nT.disabled=true; setNTxt('unsupported'); return; }
+  if(Notification.permission==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); showNotifHelp(); return; }
+
+  // Request notification permission
+  const perm=await Notification.requestPermission();
+  if(perm==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); showNotifHelp(); return; }
+  if(perm!=='granted'){ nT.checked=false; setNTxt('off'); showStatus('Berechtigung nicht erteilt – bitte nochmals versuchen.','info'); return; }
+
+  // Register Periodic Background Sync
+  const pbsOk=await registerPeriodicSync();
+  ls.set('notif-on','1'); setNTxt('on'); syncApiKeyToSW();
+
+  if(pbsOk){
+    showStatus('Tägliche Erinnerung aktiviert! 🌌 Chrome weckt die App einmal täglich.','success');
   } else {
-    // 'default' – user dismissed dialog without choosing
-    nT.checked=false; setNTxt('off');
-    showStatus('Berechtigung nicht erteilt – bitte nochmals versuchen.','info');
+    // PBS not supported or not yet granted (needs site engagement)
+    showStatus('Benachrichtigung aktiviert. Tipp: App täglich kurz öffnen damit Chrome sie als aktiv erkennt.','info');
   }
 });
 
 rT.addEventListener('change',()=>{
-  ls.set('alarm-time',rT.value); scheduleAlarm();
-  showStatus('Erinnerung: '+rT.value+' Uhr gespeichert.','success');
+  ls.set('alarm-time',rT.value);
+  if(ls.get('notif-on')==='1') setNTxt('on');
+  showStatus('Uhrzeit gespeichert: '+rT.value+' Uhr','success');
 });
 
-function scheduleAlarm(){
-  if(ls.get('notif-on')!=='1'||Notification.permission!=='granted'||!window._sw?.active) return;
-  const[h,m]=(ls.get('alarm-time')||'20:00').split(':').map(Number);
-  window._sw.active.postMessage({type:'SCHEDULE_REMINDER',hour:h,minute:m});
-}
+function scheduleAlarm(){ /* replaced by Periodic Background Sync */ }
 
 /* ── Lightbox ────────────────────────────────────────── */
 const lb      = $('lightbox');
@@ -977,6 +993,7 @@ $('save-api-btn').addEventListener('click',()=>{
   $('api-key-input').value=v||'';
   Object.keys(localStorage).filter(k=>k.startsWith('a:')||k.startsWith('de:')).forEach(k=>localStorage.removeItem(k));
   showStatus('Schlüssel gespeichert: '+(v||'DEMO_KEY'),'success');
+  syncApiKeyToSW();
   setTimeout(()=>{loadStrip();renderMain(currentDate);},500);
 });
 if(ls.get('nasa-api-key')) $('api-key-input').value=ls.get('nasa-api-key');
