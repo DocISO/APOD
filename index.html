@@ -306,6 +306,32 @@ function stripHtml(html) {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Detect broken NASA API responses (returns logo instead of real image)
+function isBrokenApod(apod) {
+  if (!apod) return true;
+  const urls = (apod.url || '') + '|' + (apod.hdurl || '');
+  return urls.includes('nasa-logo') ||
+         urls.includes('wp-content/themes') ||
+         apod.title === 'NASA Science' ||
+         apod.title === 'NASA';
+}
+
+// On version bump: wipe all cached APOD entries that contain broken data
+function clearBrokenCache() {
+  const VER = 'cache-v4-rss';
+  if (ls.get(VER)) return;
+  try {
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+      if (k.startsWith('a:') || k.startsWith('rss-') || k === 'rss-data' || k === 'rss-time') {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {}
+  ls.set(VER, '1');
+  console.log('APOD cache cleared (v4 reset)');
+}
+
 /* ═══════════════════════════════════════════════════════
    RSS Feed (primary data source for recent APODs)
 ═══════════════════════════════════════════════════════ */
@@ -437,10 +463,15 @@ async function nasaApiFetch(date) {
 let _lastDataSource = '';
 
 async function nasaFetch(date) {
-  // Check localStorage APOD cache
+  // Check localStorage APOD cache (skip broken entries)
   const cached = ls.get('a:' + date);
   if (cached) {
-    try { return JSON.parse(cached); } catch {}
+    try {
+      const data = JSON.parse(cached);
+      if (!isBrokenApod(data)) return data;
+      ls.del('a:' + date); // discard broken cached entry
+      console.warn('Discarded broken cache for', date);
+    } catch { ls.del('a:' + date); }
   }
 
   // Try RSS for recent dates (covers last ~10 days)
@@ -472,7 +503,13 @@ async function nasaRange(dates) {
   for (const date of dates) {
     try {
       const cached = ls.get('a:' + date);
-      if (cached) { results.push(JSON.parse(cached)); continue; }
+      if (cached) {
+        try {
+          const data = JSON.parse(cached);
+          if (!isBrokenApod(data)) { results.push(data); continue; }
+          ls.del('a:' + date); // discard broken entry
+        } catch { ls.del('a:' + date); }
+      }
 
       if (rssItems) {
         const item = rssItems.find(x => x.date === date);
@@ -1077,7 +1114,8 @@ async function registerPeriodicSync() {
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    const swPath = location.pathname.replace(/\/[^/]*$/, '/') + 'sw.js';
+    const reg = await navigator.serviceWorker.register(swPath);
     console.log('SW registered:', reg.scope);
     setTimeout(syncApiKeyToSW, 1000);
   } catch (e) {
@@ -1089,6 +1127,7 @@ async function registerSW() {
    Boot
 ═══════════════════════════════════════════════════════ */
 (async function init() {
+  clearBrokenCache(); // purge old NASA-logo cache entries
   registerSW();
 
   try {
