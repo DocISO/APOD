@@ -336,15 +336,55 @@ function clearBrokenCache() {
    RSS Feed (primary data source for recent APODs)
 ═══════════════════════════════════════════════════════ */
 const RSS_URL = 'https://science.nasa.gov/feed/apod-basic/';
-const PROXY = 'https://api.allorigins.win/get?url=';
-let rssCache = null;      // array of parsed items
+let rssCache = null;
 let rssCacheTime = 0;
+
+// Try fetching the RSS via multiple CORS proxies
+async function fetchRSSXml() {
+  // 1. Direct fetch (works if NASA has CORS headers)
+  try {
+    const r = await fetch(RSS_URL, { cache: 'no-cache' });
+    if (r.ok) {
+      const t = await r.text();
+      if (t.includes('<item>')) { console.log('RSS: direct'); return t; }
+    }
+  } catch {}
+
+  // 2. allorigins.win  → { contents: "..." }
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(RSS_URL));
+    if (r.ok) {
+      const j = await r.json();
+      if (j.contents?.includes('<item>')) { console.log('RSS: allorigins'); return j.contents; }
+    }
+  } catch {}
+
+  // 3. corsproxy.io  → raw content
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(RSS_URL));
+    if (r.ok) {
+      const t = await r.text();
+      if (t.includes('<item>')) { console.log('RSS: corsproxy.io'); return t; }
+    }
+  } catch {}
+
+  // 4. api.codetabs.com
+  try {
+    const r = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(RSS_URL));
+    if (r.ok) {
+      const t = await r.text();
+      if (t.includes('<item>')) { console.log('RSS: codetabs'); return t; }
+    }
+  } catch {}
+
+  throw new Error('RSS nicht erreichbar (alle Proxies fehlgeschlagen)');
+}
 
 async function fetchRSS() {
   const now = Date.now();
   if (rssCache && now - rssCacheTime < 30 * 60 * 1000) return rssCache;
 
-  // Try in-memory JSON cache from localStorage
+  // Use localStorage cache for up to 30 min
   try {
     const saved = ls.get('rss-data');
     const savedTime = ls.get('rss-time');
@@ -355,16 +395,15 @@ async function fetchRSS() {
     }
   } catch {}
 
-  const url = PROXY + encodeURIComponent(RSS_URL);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('RSS fetch failed: ' + res.status);
-  const json = await res.json();
-  if (!json.contents) throw new Error('RSS proxy returned empty');
+  const xml = await fetchRSSXml();
 
   const parser = new DOMParser();
-  const doc = parser.parseFromString(json.contents, 'text/xml');
+  const doc = parser.parseFromString(xml, 'text/xml');
   const items = [...doc.querySelectorAll('item')];
+  if (items.length === 0) throw new Error('RSS-Feed leer oder nicht parsebar');
+
   const apods = items.map(parseRSSItem).filter(Boolean);
+  console.log('RSS parsed:', apods.length, 'items, dates:', apods.map(a => a.date).join(', '));
 
   rssCache = apods;
   rssCacheTime = now;
@@ -487,9 +526,12 @@ async function nasaFetch(date) {
     console.warn('RSS failed:', e.message);
   }
 
-  // Fallback to NASA API
+  // Fallback to NASA API (for historical dates)
   _lastDataSource = 'api';
   const apod = await nasaApiFetch(date);
+  if (isBrokenApod(apod)) {
+    throw new Error('Aktuelles APOD konnte nicht geladen werden.\nNASA hat die API geändert – RSS-Proxy nicht erreichbar.\nBitte später erneut versuchen.');
+  }
   ls.set('a:' + date, JSON.stringify(apod));
   return apod;
 }
