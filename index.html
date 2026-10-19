@@ -1,1007 +1,1104 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>APOD – Weltraumbild des Tages</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#050a18" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --space:      #050a18;  --deep:      #0b1427;  --nebula:    #0f1e3c;
-      --panel:      rgba(15,30,60,0.72);
-      --border:     rgba(180,200,255,0.10);
-      --gold:       #c8a96e;  --gold-glow: rgba(200,169,110,0.22);
-      --silver:     #a8b8d8;  --white:     #e8eef8;
-      --dim:        rgba(168,184,216,0.55);
-      --accent:     #4a9eff;  --accent-dim:rgba(74,158,255,0.15);
-      --green-bg:   rgba(74,200,110,0.08); --green-b: rgba(74,200,110,0.25);
-      --radius: 14px;
-      --fd: 'Cormorant Garamond', Georgia, serif;
-      --fm: 'Space Mono', monospace;
-    }
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-    html { background:var(--space); }
-    body { min-height:100dvh; font-family:var(--fd); background:var(--space); color:var(--white); overflow-x:hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APOD</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050a18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050a18;--card:#0d1630;--card2:#131f3a;
+  --accent:#4fa3e8;--accent2:#e8a84f;
+  --text:#e8eaf0;--muted:#7a8aab;
+  --danger:#e85c4f;--success:#4fe89a;
+  --strip-h:88px;
+}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
 
-    /* Stars */
-    #stars { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-    .star  { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--dur,4s) ease-in-out infinite; }
-    @keyframes twinkle { 0%,100%{opacity:var(--min,.2);transform:scale(1)} 50%{opacity:var(--max,1);transform:scale(1.4)} }
+/* ── Header ── */
+header{position:sticky;top:0;z-index:40;background:rgba(5,10,24,.92);backdrop-filter:blur(8px);
+  display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #1a2540}
+header h1{font-size:1.1rem;font-weight:700;letter-spacing:.04em;flex:1}
+header h1 span{color:var(--accent)}
+.btn-icon{background:none;border:1px solid #1e2e50;color:var(--text);cursor:pointer;
+  border-radius:8px;padding:6px 10px;font-size:.85rem;transition:background .15s}
+.btn-icon:hover{background:#1a2540}
 
-    /* Layout */
-    #app { position:relative; z-index:1; max-width:640px; margin:0 auto; padding-bottom:105px; }
+/* ── Date strip ── */
+#strip-wrap{background:var(--card);border-bottom:1px solid #1a2540;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+#strip-wrap::-webkit-scrollbar{display:none}
+#strip{display:flex;gap:0;padding:6px 8px}
+.strip-item{flex:0 0 auto;width:72px;cursor:pointer;border-radius:8px;overflow:hidden;
+  border:2px solid transparent;transition:border-color .15s;margin:0 2px;position:relative}
+.strip-item.active{border-color:var(--accent)}
+.strip-item img{width:100%;height:52px;object-fit:cover;display:block;background:#0d1630}
+.strip-item .s-date{font-size:.62rem;color:var(--muted);text-align:center;padding:2px 0;background:var(--card)}
+.strip-item .s-icon{position:absolute;top:2px;right:2px;font-size:.7rem;background:rgba(0,0,0,.5);
+  border-radius:4px;padding:1px 3px;line-height:1}
 
-    /* Header */
-    header { padding:48px 24px 18px; text-align:center; }
-    .wordmark { font-family:var(--fm); font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); opacity:.8; margin-bottom:6px; }
-    h1 { font-size:clamp(1.8rem,6.5vw,2.7rem); font-weight:300; font-style:italic; line-height:1.1; }
-    h1 span { color:var(--gold); font-style:normal; font-weight:600; }
+/* ── Main card ── */
+#main{max-width:720px;margin:0 auto;padding:16px}
+#apod-card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.5)}
+#apod-img-wrap{position:relative;cursor:zoom-in;background:#08102a}
+#apod-img{width:100%;max-height:480px;object-fit:contain;display:block;transition:opacity .3s}
+#apod-img.loading{opacity:.4}
+.hd-badge{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.65);color:var(--accent);
+  font-size:.65rem;border:1px solid var(--accent);border-radius:4px;padding:2px 6px;pointer-events:none}
+#video-wrap{width:100%;aspect-ratio:16/9;background:#000}
+#video-wrap iframe{width:100%;height:100%;border:0}
+#apod-body{padding:16px}
+#apod-date{font-size:.75rem;color:var(--muted);margin-bottom:4px}
+#apod-title{font-size:1.3rem;font-weight:700;line-height:1.3;margin-bottom:10px}
+#object-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:0}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;
+  font-size:.72rem;border:1px solid;cursor:pointer;transition:background .15s;white-space:nowrap}
+.chip-dso{border-color:#7a5ff5;color:#a98fff;background:rgba(122,95,245,.1)}
+.chip-dso:hover{background:rgba(122,95,245,.25)}
+.chip-planet{border-color:var(--accent2);color:var(--accent2);background:rgba(232,168,79,.1)}
+.chip-planet:hover{background:rgba(232,168,79,.25)}
+.chip-sun{border-color:#ffd166;color:#ffd166;background:rgba(255,209,102,.1)}
+.chip-sun:hover{background:rgba(255,209,102,.25)}
+.chip-moon{border-color:#aabbcc;color:#aabbcc;background:rgba(170,187,204,.1)}
+.chip-moon:hover{background:rgba(170,187,204,.25)}
 
-    /* Strip */
-    #strip-wrap { padding:8px 0 4px; position:relative; }
-    #strip-scroll { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 20px 10px; scrollbar-width:none; }
-    #strip-scroll::-webkit-scrollbar { display:none; }
-    .strip-item { flex-shrink:0; width:74px; scroll-snap-align:center; cursor:pointer; border-radius:10px; overflow:hidden; border:2px solid transparent; transition:border-color .2s,transform .15s,box-shadow .2s; background:var(--deep); }
-    .strip-item:active { transform:scale(.94); }
-    .strip-item.active { border-color:var(--gold); box-shadow:0 0 16px var(--gold-glow); }
-    .strip-thumb { width:74px; height:50px; object-fit:cover; display:block; background:var(--nebula); }
-    .strip-label { font-family:var(--fm); font-size:9px; letter-spacing:.04em; text-align:center; padding:5px 2px 6px; color:var(--dim); background:var(--deep); white-space:nowrap; overflow:hidden; }
-    .strip-item.active .strip-label { color:var(--gold); }
-    .s-skel { flex-shrink:0; width:74px; border-radius:10px; overflow:hidden; }
-    .s-skel .sa { width:74px; height:50px; }
-    .s-skel .sb { width:74px; height:20px; margin-top:1px; }
-    .strip-nav { position:absolute; top:50%; transform:translateY(-50%); width:28px; height:28px; border:1px solid var(--border); border-radius:50%; background:rgba(5,10,24,.88); backdrop-filter:blur(8px); color:var(--silver); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:4; transition:color .2s,border-color .2s; }
-    .strip-nav:hover { color:var(--gold); border-color:var(--gold); }
-    #strip-prev { left:2px; } #strip-next { right:2px; }
+#tabs{display:flex;gap:0;border-bottom:1px solid #1a2540;margin-bottom:12px}
+.tab{background:none;border:none;color:var(--muted);padding:8px 14px;cursor:pointer;
+  font-size:.82rem;border-bottom:2px solid transparent;transition:color .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+#tab-en,#tab-de{display:none}
+#tab-en.show,#tab-de.show{display:block}
+.explanation{font-size:.9rem;line-height:1.7;color:#c8d0e0}
+.explanation a{color:var(--accent)}
+#copyright{font-size:.72rem;color:var(--muted);margin-top:10px}
 
-    /* Tabs */
-    .tab { display:none; } .tab.active { display:block; }
+/* ── Tooltip popup ── */
+#tooltip{position:fixed;z-index:100;background:var(--card2);border:1px solid #1e3060;
+  border-radius:12px;padding:14px 16px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.7);
+  display:none;font-size:.82rem;line-height:1.5}
+#tooltip.show{display:block}
+#tooltip h3{font-size:.9rem;margin-bottom:6px;color:var(--accent2)}
+#tooltip .tt-close{float:right;cursor:pointer;color:var(--muted);font-size:1rem;margin-left:8px}
+#tooltip a.tt-link{display:block;margin-top:8px;font-size:.75rem;color:var(--accent)}
 
-    /* Media */
-    #media-wrap { margin:4px 16px 0; border-radius:var(--radius); overflow:hidden; background:var(--deep); box-shadow:0 0 0 1px var(--border),0 20px 70px rgba(0,0,20,.7); display:none; position:relative; animation:fadeUp .7s ease both; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-    #apod-img { width:100%; display:block; aspect-ratio:16/10; object-fit:cover; transition:transform .5s ease; }
-    #apod-img:hover { transform:scale(1.012); }
-    #apod-video-wrap { width:100%; aspect-ratio:16/9; display:none; }
-    #apod-video-wrap iframe { width:100%; height:100%; border:none; }
-    .img-overlay { position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(to top,rgba(5,10,24,.88) 0%,transparent 100%); pointer-events:none; }
+/* ── Lightbox ── */
+#lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.95);
+  display:none;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lb-img{max-width:98vw;max-height:96vh;object-fit:contain;border-radius:4px}
+#lb-info{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.5);font-size:.72rem;pointer-events:none}
+#lb-spinner{position:absolute;color:var(--accent);font-size:2rem;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#lb-close{position:absolute;top:14px;right:18px;font-size:1.4rem;color:rgba(255,255,255,.6);
+  cursor:pointer;background:none;border:none;z-index:201}
 
-    /* Zoom hint badge on image */
-    #zoom-hint {
-      position:absolute; top:10px; right:10px; z-index:3;
-      background:rgba(5,10,24,.72); border:1px solid var(--border);
-      border-radius:100px; backdrop-filter:blur(8px);
-      font-family:var(--fm); font-size:10px; letter-spacing:.08em;
-      color:var(--dim); padding:4px 10px; pointer-events:none;
-      opacity:0; transition:opacity .3s;
-    }
-    #media-wrap:hover #zoom-hint { opacity:1; }
-    #apod-img[data-clickable="1"] { cursor:zoom-in; }
+/* ── Settings panel ── */
+#settings{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);
+  display:none;align-items:flex-end;justify-content:center}
+#settings.open{display:flex}
+#settings-box{background:var(--card);border-radius:20px 20px 0 0;padding:20px;
+  width:100%;max-width:540px;max-height:85vh;overflow-y:auto}
+#settings-box h2{font-size:1rem;margin-bottom:16px}
+.setting-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.setting-row label{flex:1;font-size:.85rem}
+.setting-row label small{display:block;color:var(--muted);font-size:.72rem;margin-top:1px}
+.setting-input{background:#08102a;border:1px solid #1e3060;color:var(--text);
+  border-radius:8px;padding:6px 10px;font-size:.85rem;width:100%}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#1e3060;border-radius:12px;cursor:pointer;transition:.3s}
+.slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;
+  background:#7a8aab;border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--accent)}
+input:checked+.slider:before{transform:translateX(20px);background:#fff}
+input:disabled+.slider{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:10px;
+  padding:10px 20px;font-size:.9rem;cursor:pointer;width:100%;margin-top:8px}
+.btn-primary:hover{filter:brightness(1.1)}
+.status-msg{font-size:.78rem;padding:8px;border-radius:8px;margin-top:8px;text-align:center}
+.status-msg.ok{background:rgba(79,232,154,.1);color:var(--success);border:1px solid var(--success)}
+.status-msg.err{background:rgba(232,92,79,.1);color:var(--danger);border:1px solid var(--danger)}
+.status-msg.info{background:rgba(79,163,232,.1);color:var(--accent);border:1px solid var(--accent)}
 
-    /* Lightbox */
-    #lightbox {
-      position:fixed; inset:0; z-index:1000;
-      background:rgba(3,6,14,.96); backdrop-filter:blur(12px);
-      display:flex; align-items:center; justify-content:center;
-      opacity:0; pointer-events:none; transition:opacity .25s;
-    }
-    #lightbox.open { opacity:1; pointer-events:all; }
-    #lb-img {
-      max-width:100dvw; max-height:100dvh;
-      object-fit:contain; display:block;
-      border-radius:4px;
-      transition:opacity .3s;
-      cursor:zoom-out;
-    }
-    #lb-spinner {
-      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-      width:36px; height:36px; border:2px solid rgba(200,169,110,.2);
-      border-top-color:var(--gold); border-radius:50%; animation:spin .9s linear infinite;
-    }
-    #lb-close {
-      position:absolute; top:env(safe-area-inset-top,14px); right:16px;
-      width:36px; height:36px; background:rgba(5,10,24,.8); border:1px solid var(--border);
-      border-radius:50%; color:var(--silver); font-size:20px; line-height:1;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; z-index:2; transition:color .2s,border-color .2s;
-    }
-    #lb-close:hover { color:var(--gold); border-color:var(--gold); }
-    #lb-res {
-      position:absolute; bottom:env(safe-area-inset-bottom,16px); left:50%; transform:translateX(-50%);
-      font-family:var(--fm); font-size:10px; letter-spacing:.12em; color:var(--dim);
-      background:rgba(5,10,24,.7); border:1px solid var(--border);
-      border-radius:100px; padding:4px 14px; white-space:nowrap;
-    }
+/* ── Overlay instructions ── */
+#notif-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);
+  display:none;align-items:center;justify-content:center;padding:20px}
+#notif-overlay.open{display:flex}
+#notif-overlay-box{background:var(--card2);border-radius:16px;padding:20px;max-width:360px;width:100%}
+#notif-overlay-box h3{font-size:1rem;margin-bottom:12px;color:var(--accent2)}
+#notif-overlay-box ol{padding-left:18px;font-size:.85rem;line-height:2}
+#notif-overlay-box .btn-primary{margin-top:16px}
 
-    /* Info card */
-    #info { margin:14px 16px 0; padding:22px 26px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); backdrop-filter:blur(16px); display:none; animation:fadeUp .8s .07s ease both; }
-    .lang-badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--fm); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(200,169,110,.3); border-radius:100px; padding:3px 10px; margin-bottom:12px; }
-    #apod-title  { font-size:clamp(1.4rem,5vw,2rem); font-weight:600; line-height:1.2; margin-bottom:5px; }
-    #apod-meta   { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; margin-bottom:16px; }
-    #apod-text   { font-size:1.02rem; font-weight:300; line-height:1.8; color:var(--silver); }
-    #read-more-btn { display:none; margin-top:10px; background:none; border:none; color:var(--gold); font-family:var(--fm); font-size:11px; letter-spacing:.1em; cursor:pointer; text-transform:uppercase; padding:0; }
+/* ── Loading state ── */
+#skeleton{display:none;padding:16px}
+.skel{background:linear-gradient(90deg,#0d1630 25%,#1a2a50 50%,#0d1630 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;margin-bottom:10px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-img{height:280px}
+.skel-title{height:28px;width:70%}
+.skel-text{height:14px}
+.skel-text:last-child{width:60%}
 
-    /* ── Objects section ──────────────────────────── */
-    #objects-wrap { margin-top:20px; display:none; }
-    .obj-header { font-family:var(--fm); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
-    .obj-header::before { content:''; width:16px; height:1px; background:var(--dim); opacity:.5; }
-    #obj-chips { display:flex; flex-wrap:wrap; gap:7px; }
+/* ── Source badge ── */
+.src-badge{font-size:.65rem;padding:2px 7px;border-radius:10px;border:1px solid #1e3060;color:var(--muted);margin-left:6px;vertical-align:middle}
+.src-badge.rss{border-color:#4f9ae8;color:#4f9ae8}
+.src-badge.api{border-color:#8fa;color:#8fa}
 
-    .chip {
-      padding:5px 13px; border-radius:100px; font-family:var(--fm); font-size:10px;
-      letter-spacing:.07em; cursor:pointer; transition:all .18s;
-      background:transparent; display:inline-flex; align-items:center; gap:5px;
-      white-space:nowrap;
-    }
-    /* DSO chip – gold */
-    .chip-dso { border:1px solid rgba(200,169,110,.4); color:var(--gold); }
-    .chip-dso:hover { background:var(--gold-glow); }
-    .chip-dso::before { content:'◎'; font-size:10px; }
-    /* Planet chip – blue */
-    .chip-planet { border:1px solid rgba(74,158,255,.4); color:var(--accent); }
-    .chip-planet:hover { background:var(--accent-dim); }
-    .chip-planet.active { background:var(--accent-dim); border-color:var(--accent); }
-    .chip-planet::before { content:'⬤'; font-size:7px; }
-    /* Moon chip – silver */
-    .chip-moon { border:1px solid rgba(168,184,216,.4); color:var(--silver); }
-    .chip-moon:hover { background:rgba(168,184,216,.08); }
-    .chip-moon.active { background:rgba(168,184,216,.1); border-color:var(--silver); }
-    .chip-moon::before { content:'☽'; font-size:11px; }
-    /* Sun chip – orange (SOHO link) */
-    .chip-sun { border:1px solid rgba(255,180,50,.4); color:#ffb432; }
-    .chip-sun:hover { background:rgba(255,180,50,.08); }
-    .chip-sun::before { content:'☀'; font-size:11px; }
-
-    /* Visibility detail card */
-    #obj-detail { margin-top:11px; }
-    .vis-loading { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); border-radius:9px; font-family:var(--fm); font-size:10px; color:var(--accent); letter-spacing:.07em; }
-    .vis-card { padding:13px 16px; background:rgba(74,158,255,.06); border:1px solid rgba(74,158,255,.2); border-radius:9px; font-family:var(--fm); font-size:11px; color:var(--silver); letter-spacing:.04em; line-height:1.8; }
-    .vis-card strong { color:var(--white); }
-    .vis-card .vis-row { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:5px; }
-    .vis-tag { display:inline-flex; align-items:center; gap:4px; color:var(--dim); font-size:10px; }
-    .vis-tag b { color:var(--silver); }
-    .vis-unavail { font-style:italic; color:var(--dim); padding:8px 0; font-family:var(--fm); font-size:10px; }
-
-    /* German source */
-    #de-status { display:none; margin-top:14px; padding:10px 14px; border-radius:9px; font-family:var(--fm); font-size:10px; letter-spacing:.06em; }
-    #de-status.loading { display:flex; gap:8px; align-items:center; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); color:var(--accent); }
-    #de-status.warn    { display:block; background:rgba(200,169,110,.07); border:1px solid rgba(200,169,110,.2); color:var(--gold); }
-    #de-link-row { display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-    #de-link-row .de-src { font-family:var(--fm); font-size:10px; color:var(--dim); letter-spacing:.06em; }
-    #de-link-row a { font-family:var(--fm); font-size:10px; color:var(--gold); text-decoration:none; letter-spacing:.06em; border:1px solid rgba(200,169,110,.25); border-radius:6px; padding:4px 10px; transition:background .2s; }
-    #de-link-row a:hover { background:var(--gold-glow); }
-    .mini-spin { width:12px; height:12px; border:1.5px solid rgba(74,158,255,.3); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; flex-shrink:0; }
-    @keyframes spin { to{transform:rotate(360deg)} }
-
-    /* Skeleton */
-    .skeleton { background:linear-gradient(90deg,var(--deep) 25%,var(--nebula) 50%,var(--deep) 75%); background-size:200% 100%; animation:shimmer 1.6s infinite; border-radius:6px; }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .sk-img  { width:100%; aspect-ratio:16/10; border-radius:var(--radius); }
-    .sk-title{ height:28px; width:65%; margin-bottom:10px; }
-    .sk-sub  { height:12px; width:35%; margin-bottom:16px; }
-    .sk-line { height:12px; width:100%; margin-bottom:7px; }
-    .sk-line.s{ width:60%; }
-    #sk-wrap { margin:4px 16px 0; }
-    #sk-info { margin:14px 16px 0; padding:22px 26px; }
-
-    /* Settings */
-    #tab-settings { padding:14px 0 0; }
-    #settings { margin:0 16px; padding:22px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); backdrop-filter:blur(16px); }
-    .stg-title { font-family:var(--fm); font-size:11px; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
-    .stg-title::before { content:''; width:20px; height:1px; background:var(--gold); opacity:.5; }
-    .stg-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:13px 0; border-bottom:1px solid var(--border); }
-    .stg-row:last-child { border-bottom:none; }
-    .stg-lbl { font-size:1rem; font-weight:300; }
-    .stg-sub { font-family:var(--fm); font-size:10px; color:var(--dim); margin-top:3px; letter-spacing:.05em; }
-    .toggle { flex-shrink:0; width:48px; height:26px; position:relative; }
-    .toggle input { opacity:0; width:0; height:0; }
-    .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:100px; border:1px solid rgba(180,200,255,.15); cursor:pointer; transition:background .3s; }
-    .toggle-track::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:var(--silver); transition:transform .3s,background .3s; }
-    .toggle input:checked + .toggle-track { background:var(--gold-glow); border-color:var(--gold); }
-    .toggle input:checked + .toggle-track::after { transform:translateX(22px); background:var(--gold); }
-    #reminder-time { background:var(--accent-dim); border:1px solid rgba(74,158,255,.3); color:var(--white); font-family:var(--fm); font-size:1rem; padding:8px 14px; border-radius:8px; outline:none; cursor:pointer; color-scheme:dark; }
-    .api-key-row { display:flex; gap:8px; margin-top:9px; width:100%; }
-    #api-key-input { flex:1; background:var(--deep); border:1px solid var(--border); border-radius:8px; color:var(--white); font-family:var(--fm); font-size:12px; padding:9px 12px; outline:none; }
-    #api-key-input:focus { border-color:var(--gold); }
-    #api-key-input::placeholder { color:var(--dim); }
-    .btn-sm { padding:9px 16px; background:var(--gold); color:var(--space); border:none; border-radius:8px; font-family:var(--fm); font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
-    .api-note { margin:12px 16px 0; padding:15px 18px; background:rgba(200,169,110,.05); border:1px solid rgba(200,169,110,.2); border-radius:var(--radius); font-size:.9rem; font-weight:300; color:var(--silver); line-height:1.65; }
-    .api-note a { color:var(--gold); text-decoration:none; }
-    .api-note a:hover { text-decoration:underline; }
-    .api-note code { font-family:var(--fm); font-size:11px; background:rgba(200,169,110,.12); border:1px solid rgba(200,169,110,.25); border-radius:5px; padding:2px 7px; color:var(--gold); }
-
-    /* Status */
-    #status { margin:10px 16px 0; padding:11px 18px; border-radius:10px; font-family:var(--fm); font-size:11px; letter-spacing:.06em; display:none; }
-    #status.success { display:block; background:var(--green-bg); border:1px solid var(--green-b); color:#74c87a; }
-    #status.error   { display:block; background:rgba(255,100,80,.1); border:1px solid rgba(255,100,80,.25); color:#ff8070; }
-    #status.info    { display:block; background:var(--accent-dim); border:1px solid rgba(74,158,255,.2); color:var(--accent); }
-
-    /* Install */
-    #install-banner { display:none; margin:10px 16px 0; padding:15px 18px; background:linear-gradient(135deg,rgba(74,158,255,.12),rgba(200,169,110,.08)); border:1px solid rgba(74,158,255,.25); border-radius:var(--radius); }
-    #install-banner p { font-size:.94rem; font-weight:300; color:var(--silver); margin-bottom:10px; }
-    .ib-btns { display:flex; gap:10px; }
-    .btn-gold  { padding:9px 18px; background:var(--gold); color:var(--space); border:none; border-radius:8px; font-family:var(--fm); font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
-    .btn-ghost { padding:9px 16px; background:transparent; color:var(--dim); border:1px solid var(--border); border-radius:8px; font-family:var(--fm); font-size:11px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
-
-    /* Nav */
-    nav { position:fixed; bottom:0; left:0; right:0; z-index:100; display:flex; justify-content:center; padding:0 16px env(safe-area-inset-bottom,14px); pointer-events:none; }
-    .nav-pill { pointer-events:all; display:flex; gap:2px; background:rgba(11,20,39,.92); border:1px solid var(--border); border-radius:100px; padding:6px; backdrop-filter:blur(20px); box-shadow:0 8px 40px rgba(0,0,20,.65); margin-bottom:12px; }
-    .nav-btn { padding:9px 20px; border:none; border-radius:100px; background:transparent; color:var(--dim); font-family:var(--fm); font-size:11px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
-    .nav-btn.active { background:var(--gold-glow); color:var(--gold); border:1px solid rgba(200,169,110,.3); }
-    .nav-btn:not(.active):hover { color:var(--silver); }
-
-    @media(min-width:480px){
-      #sk-wrap,#sk-info,#media-wrap,#info,#settings,#install-banner,.api-note { margin-left:24px; margin-right:24px; }
-      #strip-scroll { padding-left:24px; padding-right:24px; }
-    }
-  </style>
+/* ── Error ── */
+#error-box{display:none;padding:24px;text-align:center}
+#error-box.show{display:block}
+#error-box .err-icon{font-size:2.5rem;margin-bottom:8px}
+#error-box p{color:var(--muted);font-size:.9rem;margin-bottom:16px}
+#error-box button{background:var(--accent);color:#fff;border:none;border-radius:10px;
+  padding:8px 20px;cursor:pointer;font-size:.85rem}
+</style>
 </head>
 <body>
 
-<div id="stars"></div>
-<div id="app">
+<header>
+  <h1>🔭 <span>APOD</span></h1>
+  <button class="btn-icon" id="btn-prev" title="Vorheriger Tag">◀</button>
+  <button class="btn-icon" id="btn-next" title="Nächster Tag" disabled>▶</button>
+  <button class="btn-icon" id="btn-settings" title="Einstellungen">⚙</button>
+</header>
 
-  <header>
-    <div class="wordmark">NASA · APOD · Weltraumbild des Tages</div>
-    <h1>Astronomy <span>Picture</span> of the Day</h1>
-  </header>
+<div id="strip-wrap"><div id="strip"></div></div>
 
-  <div id="install-banner">
-    <p>Installiere die App für tägliche Erinnerungen – auch offline.</p>
-    <div class="ib-btns">
-      <button class="btn-gold" id="install-btn">Installieren</button>
-      <button class="btn-ghost" id="dismiss-install">Später</button>
+<div id="main">
+  <div id="skeleton">
+    <div class="skel skel-img"></div>
+    <div style="padding:16px">
+      <div class="skel skel-title"></div>
+      <div class="skel skel-text" style="margin-top:12px"></div>
+      <div class="skel skel-text"></div>
+      <div class="skel skel-text"></div>
     </div>
   </div>
 
-  <div id="status"></div>
-
-  <!-- ═══ BILD ═══ -->
-  <div class="tab active" id="tab-bild">
-
-    <div id="strip-wrap">
-      <button class="strip-nav" id="strip-prev">‹</button>
-      <div id="strip-scroll"></div>
-      <button class="strip-nav" id="strip-next">›</button>
+  <div id="apod-card" style="display:none">
+    <div id="apod-img-wrap">
+      <img id="apod-img" alt="APOD">
+      <div id="video-wrap" style="display:none"></div>
+      <div class="hd-badge" id="hd-badge" style="display:none">HD</div>
     </div>
-
-    <div id="sk-wrap"><div class="skeleton sk-img"></div></div>
-    <div id="sk-info">
-      <div class="skeleton sk-title"></div><div class="skeleton sk-sub"></div>
-      <div class="skeleton sk-line"></div><div class="skeleton sk-line"></div>
-      <div class="skeleton sk-line s"></div>
-    </div>
-
-    <div id="media-wrap">
-      <img id="apod-img" alt="APOD" loading="lazy" />
-      <div id="apod-video-wrap"><iframe id="apod-iframe" allowfullscreen></iframe></div>
-      <div class="img-overlay"></div>
-      <div id="zoom-hint">🔍 Vollauflösung</div>
-    </div>
-
-    <!-- Lightbox (outside app container so it's truly fullscreen) -->
-    <div id="lightbox" role="dialog" aria-modal="true">
-      <div id="lb-spinner"></div>
-      <img id="lb-img" alt="APOD Vollauflösung" />
-      <button id="lb-close" aria-label="Schließen">×</button>
-      <div id="lb-res"></div>
-    </div>
-
-    <div id="info">
-      <div class="lang-badge" id="lang-badge">🇺🇸 Englisch</div>
+    <div id="apod-body">
+      <div id="apod-date"></div>
       <div id="apod-title"></div>
-      <div id="apod-meta"></div>
-      <div id="apod-text"></div>
-      <button id="read-more-btn">Mehr anzeigen ↓</button>
-
-      <!-- Object chips -->
-      <div id="objects-wrap">
-        <div class="obj-header">Objekte im Bild</div>
-        <div id="obj-chips"></div>
-        <div id="obj-detail"></div>
+      <div id="object-chips"></div>
+      <div id="tabs">
+        <button class="tab active" data-tab="en">English</button>
+        <button class="tab" data-tab="de">Deutsch</button>
       </div>
-
-      <div id="de-status"></div>
-      <div id="de-link-row">
-        <span class="de-src">Quelle: starobserver.org</span>
-        <a id="de-link" href="#" target="_blank">Originalseite ↗</a>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ═══ EINSTELLUNGEN ═══ -->
-  <div class="tab" id="tab-settings">
-    <div id="settings">
-      <div class="stg-title">Einstellungen</div>
-      <div class="stg-row">
-        <div><div class="stg-lbl">Tägliche Erinnerung</div><div class="stg-sub" id="notif-txt">Tippe zum Aktivieren</div></div>
-        <label class="toggle"><input type="checkbox" id="notif-toggle" /><span class="toggle-track"></span></label>
-      </div>
-      <div class="stg-row">
-        <div><div class="stg-lbl">Uhrzeit</div><div class="stg-sub">Täglich zu dieser Zeit</div></div>
-        <input type="time" id="reminder-time" value="20:00" />
-      </div>
-      <div class="stg-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <div><div class="stg-lbl">NASA API-Schlüssel</div><div class="stg-sub">Leer lassen → Demo-Schlüssel wird genutzt</div></div>
-        <div class="api-key-row">
-          <input type="text" id="api-key-input" placeholder="Eigener API-Key (optional)" maxlength="50" />
-          <button class="btn-sm" id="save-api-btn">Speichern</button>
-        </div>
-      </div>
-    </div>
-    <div class="api-note">
-      Der Demo-Schlüssel lautet exakt <code>DEMO_KEY</code> (Großbuchstaben).<br><br>
-      🔑 Unbegrenzt kostenlos: <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a>
-      → „Generate API Key" → E-Mail bestätigen.
+      <div id="tab-en" class="show explanation"></div>
+      <div id="tab-de" class="explanation"></div>
+      <div id="copyright"></div>
     </div>
   </div>
 
+  <div id="error-box">
+    <div class="err-icon">🌌</div>
+    <p id="error-msg">Fehler beim Laden des APOD.</p>
+    <button onclick="loadApod(currentDate)">Erneut versuchen</button>
+  </div>
 </div>
 
-<nav>
-  <div class="nav-pill">
-    <button class="nav-btn active" data-tab="bild">🌌 Bild</button>
-    <button class="nav-btn" data-tab="settings">⚙ Einstellungen</button>
+<!-- Tooltip -->
+<div id="tooltip">
+  <span class="tt-close" onclick="closeTooltip()">✕</span>
+  <h3 id="tt-title"></h3>
+  <div id="tt-body"></div>
+  <a id="tt-link" class="tt-link" target="_blank"></a>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lb-close" onclick="closeLightbox()">✕</button>
+  <div id="lb-spinner">↻</div>
+  <img id="lb-img" style="display:none">
+  <div id="lb-info"></div>
+</div>
+
+<!-- Settings -->
+<div id="settings" onclick="if(event.target===this)closeSettings()">
+<div id="settings-box">
+  <h2>⚙ Einstellungen</h2>
+
+  <div class="setting-row">
+    <label>NASA API-Schlüssel
+      <small>Für ältere Daten (>10 Tage). <a href="https://api.nasa.gov" target="_blank">api.nasa.gov</a></small>
+    </label>
+    <input class="setting-input" id="api-key-input" placeholder="DEMO_KEY" style="width:180px" maxlength="48">
   </div>
-</nav>
+
+  <div class="setting-row">
+    <label>Tägliche Erinnerung
+      <small>Benötigt Periodische Hintergrundsynchronisierung</small>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="notif-toggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="setting-row" id="time-row" style="display:none">
+    <label>Uhrzeit der Erinnerung</label>
+    <input type="time" class="setting-input" id="alarm-time" value="08:00" style="width:120px">
+  </div>
+
+  <div id="settings-status"></div>
+
+  <button class="btn-primary" onclick="saveSettings()">Speichern</button>
+  <button class="btn-icon" onclick="closeSettings()" style="width:100%;margin-top:8px;border-radius:10px">Schließen</button>
+</div>
+</div>
+
+<!-- Notification overlay (for denied state) -->
+<div id="notif-overlay">
+<div id="notif-overlay-box">
+  <h3>🔔 Benachrichtigungen aktivieren</h3>
+  <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">
+    Chrome hat Benachrichtigungen für diese Seite blockiert. So entsperrst du sie:
+  </p>
+  <ol>
+    <li>Android <b>Einstellungen</b> öffnen</li>
+    <li><b>Apps</b> → <b>Chrome</b></li>
+    <li><b>Benachrichtigungen</b> → aktivieren</li>
+    <li>Alternativ: Chrome-URL-Leiste → 🔒 → <b>Website-Einstellungen</b> → Benachrichtigungen → <b>Zulassen</b></li>
+    <li>Dann hier erneut versuchen</li>
+  </ol>
+  <button class="btn-primary" onclick="document.getElementById('notif-overlay').classList.remove('open')">Verstanden</button>
+</div>
+</div>
 
 <script>
 'use strict';
 
-/* ── Utils ───────────────────────────────────────────── */
-const $ = id => document.getElementById(id);
+/* ═══════════════════════════════════════════════════════
+   Utilities
+═══════════════════════════════════════════════════════ */
 const ls = {
-  get: k=>{try{return localStorage.getItem(k)}catch{return null}},
-  set: (k,v)=>{try{localStorage.setItem(k,v)}catch{}},
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} }
 };
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function addDays(ds,n){ const d=new Date(ds+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
-function fmtShort(s){ return new Date(s+'T00:00:00').toLocaleDateString('de-DE',{day:'numeric',month:'short'}); }
-function fmtLong(s) { return new Date(s+'T00:00:00').toLocaleDateString('de-DE',{year:'numeric',month:'long',day:'numeric'}); }
-function fmtTime(d) { return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
-function showStatus(msg,type='info'){
-  const el=$('status'); el.textContent=msg; el.className=type;
-  clearTimeout(el._t);
-  if(type!=='error') el._t=setTimeout(()=>el.style.display='none',4500);
-}
-function getApiKey(){
-  const k=(ls.get('nasa-api-key')||'').trim();
-  if(!k) return 'DEMO_KEY';
-  // Normalize any "demo..." variant → DEMO_KEY
-  if(/^demo/i.test(k)) return 'DEMO_KEY';
-  return k;
+
+function fmtDate(iso) {
+  const [y, m, d] = iso.split('-');
+  return new Date(+y, +m - 1, +d).toLocaleDateString('de-DE', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
 }
 
-/* ── Cache ───────────────────────────────────────────── */
-function saveApod(d){ if(d?.date) ls.set('a:'+d.date,JSON.stringify(d)); }
-function loadApod(date){ const s=ls.get('a:'+date); return s?JSON.parse(s):null; }
-function saveRange(arr){ arr.forEach(saveApod); }
+function isoToday() { return new Date().toISOString().slice(0, 10); }
 
-/* ── State ───────────────────────────────────────────── */
-let currentDate = todayStr();
-let stripApods  = [];
-let detectedObjs= []; // objects found in current APOD
-const STRIP_N   = 5;
-const APOD_MIN  = '1995-06-16';
+function addDays(iso, n) {
+  const d = new Date(iso + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
-/* ── NASA API ────────────────────────────────────────── */
-async function nasaFetch(date){
-  const c=loadApod(date); if(c) return c;
-  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${getApiKey()}&date=${date}&thumbs=true`);
-  if(!r.ok){
-    if(r.status===403) throw new Error('403 – API-Key ungültig. Bitte DEMO_KEY (Unterstrich) oder eigenen Key eintragen.');
-    if(r.status===503) throw new Error('503 – NASA-Server vorübergehend nicht erreichbar. Bitte später erneut versuchen.');
-    throw new Error('NASA API '+r.status);
+function stripHtml(html) {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/* ═══════════════════════════════════════════════════════
+   RSS Feed (primary data source for recent APODs)
+═══════════════════════════════════════════════════════ */
+const RSS_URL = 'https://science.nasa.gov/feed/apod-basic/';
+const PROXY = 'https://api.allorigins.win/get?url=';
+let rssCache = null;      // array of parsed items
+let rssCacheTime = 0;
+
+async function fetchRSS() {
+  const now = Date.now();
+  if (rssCache && now - rssCacheTime < 30 * 60 * 1000) return rssCache;
+
+  // Try in-memory JSON cache from localStorage
+  try {
+    const saved = ls.get('rss-data');
+    const savedTime = ls.get('rss-time');
+    if (saved && savedTime && now - parseInt(savedTime) < 30 * 60 * 1000) {
+      rssCache = JSON.parse(saved);
+      rssCacheTime = parseInt(savedTime);
+      return rssCache;
+    }
+  } catch {}
+
+  const url = PROXY + encodeURIComponent(RSS_URL);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('RSS fetch failed: ' + res.status);
+  const json = await res.json();
+  if (!json.contents) throw new Error('RSS proxy returned empty');
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(json.contents, 'text/xml');
+  const items = [...doc.querySelectorAll('item')];
+  const apods = items.map(parseRSSItem).filter(Boolean);
+
+  rssCache = apods;
+  rssCacheTime = now;
+  ls.set('rss-data', JSON.stringify(apods));
+  ls.set('rss-time', now.toString());
+
+  return apods;
+}
+
+function parseRSSItem(item) {
+  try {
+    const getText = (tag) => item.querySelector(tag)?.textContent?.trim() || '';
+    const getNS = (localName) => {
+      const el = item.getElementsByTagNameNS('*', localName)[0];
+      return el?.textContent?.trim() || '';
+    };
+
+    const pubDateStr = getText('pubDate');
+    if (!pubDateStr) return null;
+    const date = new Date(pubDateStr).toISOString().slice(0, 10);
+
+    const title = getText('title');
+    const hdurl = getNS('hdurl');
+    const explanation = stripHtml(getNS('explanation'));
+    const copyright = stripHtml(getNS('copyright'));
+
+    // Parse content:encoded for media URL
+    const encoded = item.getElementsByTagNameNS('*', 'encoded')[0]?.textContent || '';
+
+    let media_type = 'image';
+    let url = hdurl;
+
+    // YouTube embed
+    const ytMatch = encoded.match(/<iframe[^>]+src="([^"]*youtube[^"]*)"/i) ||
+                    encoded.match(/src="([^"]*youtu\.be[^"]*)"/i);
+    // MP4 video
+    const mp4Match = encoded.match(/<source[^>]+src="([^"]+\.mp4[^"]*)"/i);
+    // Standard image
+    const imgMatch = encoded.match(/<IMG\s+SRC="([^"]+)"/i) ||
+                     encoded.match(/<img[^>]+src="([^"]+)"/i);
+
+    if (mp4Match) {
+      media_type = 'video';
+      url = mp4Match[1];
+    } else if (ytMatch) {
+      media_type = 'video';
+      url = ytMatch[1];
+      if (url && !url.startsWith('http')) url = 'https:' + url;
+    } else if (imgMatch) {
+      url = imgMatch[1];
+    }
+
+    // Thumbnail: for images use hdurl/url, for videos try og thumbnail
+    const thumbnail = (media_type === 'image') ? (hdurl || url) : url;
+
+    return { date, title, url, hdurl: hdurl || url, explanation, copyright, media_type, thumbnail };
+  } catch { return null; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   NASA API (fallback for historical dates)
+═══════════════════════════════════════════════════════ */
+function getApiKey() {
+  const raw = ls.get('nasa-api-key') || 'DEMO_KEY';
+  return /^demo/i.test(raw.trim()) ? 'DEMO_KEY' : raw.trim();
+}
+
+async function nasaApiFetch(date) {
+  const key = getApiKey();
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${key}&date=${date}&thumbs=true`;
+  const res = await fetch(url);
+  if (res.status === 429) throw new Error('NASA API 429 – Zu viele Anfragen. Warte kurz.');
+  if (res.status === 403) throw new Error('NASA API 403 – Ungültiger API-Schlüssel.');
+  if (!res.ok) throw new Error(`NASA API ${res.status}`);
+  const d = await res.json();
+
+  // Detect broken response (NASA logo returned instead of real image)
+  const isbroken = d.hdurl && d.hdurl.includes('nasa-logo');
+  if (isbroken) throw new Error('NASA API returned broken data for this date');
+
+  return {
+    date: d.date,
+    title: d.title,
+    url: d.media_type === 'video' ? d.url : (d.url || ''),
+    hdurl: d.hdurl || d.url || '',
+    explanation: d.explanation || '',
+    copyright: d.copyright || '',
+    media_type: d.media_type || 'image',
+    thumbnail: d.thumbnail_url || d.url || ''
+  };
+}
+
+/* ═══════════════════════════════════════════════════════
+   Main fetch: RSS first, API fallback
+═══════════════════════════════════════════════════════ */
+let _lastDataSource = '';
+
+async function nasaFetch(date) {
+  // Check localStorage APOD cache
+  const cached = ls.get('a:' + date);
+  if (cached) {
+    try { return JSON.parse(cached); } catch {}
   }
-  const d=await r.json(); saveApod(d); return d;
-}
-async function nasaRange(start,end){
-  let d=new Date(start+'T00:00:00'); const e=new Date(end+'T00:00:00'); const out=[];
-  let allCached=true;
-  while(d<=e){ const ds=d.toISOString().slice(0,10); const c=loadApod(ds); if(c) out.push(c); else {allCached=false;break;} d.setDate(d.getDate()+1); }
-  if(allCached&&out.length) return out;
-  const r=await fetch(`https://api.nasa.gov/planetary/apod?api_key=${getApiKey()}&start_date=${start}&end_date=${end}&thumbs=true`);
-  if(!r.ok) throw new Error('NASA API '+r.status);
-  const data=await r.json(); saveRange(data); return data;
+
+  // Try RSS for recent dates (covers last ~10 days)
+  try {
+    const items = await fetchRSS();
+    const item = items.find(x => x.date === date);
+    if (item) {
+      ls.set('a:' + date, JSON.stringify(item));
+      _lastDataSource = 'rss';
+      return item;
+    }
+  } catch (e) {
+    console.warn('RSS failed:', e.message);
+  }
+
+  // Fallback to NASA API
+  _lastDataSource = 'api';
+  const apod = await nasaApiFetch(date);
+  ls.set('a:' + date, JSON.stringify(apod));
+  return apod;
 }
 
-/* ── starobserver.org German text ────────────────────── */
-function starUrl(date){
-  const[y,m,d]=date.split('-');
+async function nasaRange(dates) {
+  const results = [];
+  let rssItems = null;
+
+  try { rssItems = await fetchRSS(); } catch {}
+
+  for (const date of dates) {
+    try {
+      const cached = ls.get('a:' + date);
+      if (cached) { results.push(JSON.parse(cached)); continue; }
+
+      if (rssItems) {
+        const item = rssItems.find(x => x.date === date);
+        if (item) { ls.set('a:' + date, JSON.stringify(item)); results.push(item); continue; }
+      }
+
+      // API fallback
+      const apod = await nasaApiFetch(date);
+      ls.set('a:' + date, JSON.stringify(apod));
+      results.push(apod);
+    } catch { /* skip failed dates */ }
+  }
+  return results;
+}
+
+/* ═══════════════════════════════════════════════════════
+   starobserver.org German translation
+═══════════════════════════════════════════════════════ */
+function starUrl(date) {
+  const [y, m, d] = date.split('-');
   return `https://www.starobserver.org/ap${y.slice(2)}${m}${d}/`;
 }
-async function fetchGerman(date){
-  const ck='de:'+date; const cached=ls.get(ck); if(cached) return JSON.parse(cached);
-  const target=starUrl(date);
-  const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
-  if(!res.ok) throw new Error('Proxy '+res.status);
-  const json=await res.json(); const html=json.contents;
-  if(!html) throw new Error('Leer');
-  // Validate: check "Zur Originalseite" link matches date
-  const slug='ap'+date.replace(/-/g,'').slice(2)+'.html';
-  if(!html.includes(slug)) throw new Error('Datum stimmt nicht überein');
-  // Parse title
-  const tm=html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  const title=tm?tm[1].replace(/<[^>]+>/g,'').trim():'';
-  // Parse body paragraphs between </strong> and "Zur Originalseite"
-  const bs=html.indexOf('</strong>'); const be=html.indexOf('Zur Originalseite');
-  if(bs<0||be<0) throw new Error('Textblock nicht gefunden');
-  const pMatches=[...html.slice(bs,be).matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
-  const paragraphs=pMatches.map(m=>m[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()).filter(p=>p.length>20);
-  const result={title,text:paragraphs.join('\n\n'),url:target,date};
-  ls.set(ck,JSON.stringify(result));
-  return result;
+
+async function fetchGerman(date, nasaTitle) {
+  const cached = ls.get('de:' + date);
+  if (cached) return cached;
+
+  const url = PROXY + encodeURIComponent(starUrl(date));
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.contents) return null;
+
+  // Parse the HTML
+  const dp = new DOMParser();
+  const doc = dp.parseFromString(json.contents, 'text/html');
+
+  // Verify it matches the current APOD (title check)
+  if (nasaTitle) {
+    const deTitle = doc.querySelector('h2,h1')?.textContent?.trim() || '';
+    const norm = t => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Just check at least 40% word overlap with NASA title
+    const naWords = nasaTitle.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const deText = doc.body?.textContent?.toLowerCase() || '';
+    const matchCount = naWords.filter(w => deText.includes(w)).length;
+    if (naWords.length > 0 && matchCount / naWords.length < 0.3) {
+      return null; // translation doesn't match
+    }
+  }
+
+  // Extract explanation paragraph(s)
+  const paras = [...doc.querySelectorAll('p')].filter(p => p.textContent.length > 80);
+  if (paras.length === 0) return null;
+
+  const text = paras.map(p => p.textContent.trim()).join('\n\n');
+  ls.set('de:' + date, text);
+  return text;
 }
 
-/* ══════════════════════════════════════════════════════
-   OBJECT DETECTION & CHIPS
-   ══════════════════════════════════════════════════════ */
-function detectObjects(title, text){
-  const src=(title+' '+text).replace(/<[^>]+>/g,' ');
-  const out=[], seen=new Set();
-  const add=o=>{ if(!seen.has(o.id)){seen.add(o.id);out.push(o);} };
+/* ═══════════════════════════════════════════════════════
+   Astronomical object detection
+═══════════════════════════════════════════════════════ */
+const PLANETS = ['Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune'];
+const PLANET_DE = { Mercury:'Merkur', Venus:'Venus', Mars:'Mars', Jupiter:'Jupiter',
+  Saturn:'Saturn', Uranus:'Uranus', Neptune:'Neptun' };
 
-  // Messier M1–M110
-  for(const m of src.matchAll(/\bM\s?(\d{1,3})\b/g)){
-    const n=parseInt(m[1]); if(n>=1&&n<=110) add({type:'dso',id:'M '+n,label:'M '+n});
-  }
-  // NGC 1–7840
-  for(const m of src.matchAll(/\bNGC\s?(\d{1,4})\b/gi)){
-    const n=parseInt(m[1]); if(n>=1&&n<=7840) add({type:'dso',id:'NGC '+n,label:'NGC '+n});
-  }
-  // IC 1–5373
-  for(const m of src.matchAll(/\bIC\s?(\d{1,4})\b/g)){
-    const n=parseInt(m[1]); if(n>=1&&n<=5373) add({type:'dso',id:'IC '+n,label:'IC '+n});
-  }
+function detectObjects(title, text) {
+  const haystack = (title + ' ' + text).toLowerCase();
+  const found = [];
 
-  // Planets (English + German names)
-  const PLANETS=[
-    {pat:/\b(Mercury|Merkur)\b/i,  body:'Mercury', label:'Merkur'},
-    {pat:/\bVenus\b/i,             body:'Venus',   label:'Venus'},
-    {pat:/\bMars\b/i,              body:'Mars',    label:'Mars'},
-    {pat:/\bJupiter\b/i,           body:'Jupiter', label:'Jupiter'},
-    {pat:/\bSaturn\b/i,            body:'Saturn',  label:'Saturn'},
-    {pat:/\bUranus\b/i,            body:'Uranus',  label:'Uranus'},
-    {pat:/\b(Neptune|Neptun)\b/i,  body:'Neptune', label:'Neptun'},
-  ];
-  for(const p of PLANETS){
-    if(p.pat.test(src)) add({type:'planet',id:p.body,label:p.label,body:p.body});
+  // DSO: Messier
+  const mRe = /\b(m\s?(\d{1,3}))\b/gi;
+  let m;
+  while ((m = mRe.exec(haystack)) !== null) {
+    const n = parseInt(m[2]);
+    if (n >= 1 && n <= 110) found.push({ type: 'dso', id: 'M' + n, label: 'M' + n });
+  }
+  // NGC
+  const ngcRe = /\bngc\s?(\d{1,4})\b/gi;
+  while ((m = ngcRe.exec(haystack)) !== null) {
+    const n = parseInt(m[1]);
+    if (n >= 1 && n <= 7840) found.push({ type: 'dso', id: 'NGC' + n, label: 'NGC ' + n });
+  }
+  // IC
+  const icRe = /\bic\s?(\d{1,4})\b/gi;
+  while ((m = icRe.exec(haystack)) !== null) {
+    const n = parseInt(m[1]);
+    if (n >= 1 && n <= 5373) found.push({ type: 'dso', id: 'IC' + n, label: 'IC ' + n });
   }
 
+  // Planets
+  for (const p of PLANETS) {
+    if (haystack.includes(p.toLowerCase())) {
+      found.push({ type: 'planet', id: p, label: PLANET_DE[p] || p });
+    }
+  }
   // Moon
-  if(/\b(Moon|Mond)\b/i.test(src)) add({type:'moon',id:'Moon',label:'Mond',body:'Moon'});
+  if (/\b(moon|mond)\b/.test(haystack)) found.push({ type: 'moon', id: 'Moon', label: 'Mond' });
+  // Sun
+  if (/\b(sun|sonne|solar)\b/.test(haystack)) found.push({ type: 'sun', id: 'Sun', label: 'Sonne' });
 
-  // Sun → SOHO/NASA solar link
-  if(/\b(Sun|Sonne|Solar|solar)\b/.test(src)) add({type:'sun',id:'Sun',label:'Sonne'});
-
-  return out;
+  // Deduplicate
+  const seen = new Set();
+  return found.filter(f => { if (seen.has(f.id)) return false; seen.add(f.id); return true; });
 }
 
-function simbadUrl(id){
-  // e.g. "M 31" → https://simbad.u-strasbg.fr/simbad/sim-id?Ident=M+31
-  return 'https://simbad.u-strasbg.fr/simbad/sim-id?Ident='+id.replace(/ /g,'+');
+function simbadUrl(id) {
+  return 'https://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + encodeURIComponent(id);
 }
 
-function renderObjects(objects){
-  const wrap=$('objects-wrap'), chips=$('obj-chips'), detail=$('obj-detail');
-  if(!objects.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  chips.innerHTML='';
-  detail.innerHTML='';
+/* ═══════════════════════════════════════════════════════
+   Astronomy engine (planet visibility)
+═══════════════════════════════════════════════════════ */
+let AstroEngine = null;
 
-  objects.forEach(obj=>{
-    const chip=document.createElement('button');
-    chip.className='chip chip-'+obj.type;
-    chip.textContent=obj.label;
+async function loadAstroEngine() {
+  if (AstroEngine) return AstroEngine;
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.js';
+  await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
+  AstroEngine = window.Astronomy;
+  return AstroEngine;
+}
 
-    if(obj.type==='dso'){
-      chip.title='SIMBAD-Datenbank öffnen';
-      chip.addEventListener('click',()=>window.open(simbadUrl(obj.id),'_blank'));
-    } else if(obj.type==='sun'){
-      chip.title='SOHO Sonnenbeobachtung öffnen';
-      chip.addEventListener('click',()=>window.open('https://soho.nascom.nasa.gov/data/realtime-images.html','_blank'));
+const OBS_LAT = 48.46, OBS_LON = 8.41, OBS_ALT = 500; // Freudenstadt default
+
+async function computeVisibility(bodyName, displayName) {
+  try {
+    const A = await loadAstroEngine();
+    const obs = new A.Observer(OBS_LAT, OBS_LON, OBS_ALT);
+    const now = new Date();
+    return getPlanetHtml(A, obs, now, bodyName, displayName);
+  } catch (e) {
+    return `<p>Fehler beim Berechnen: ${e.message}</p>`;
+  }
+}
+
+function getPlanetHtml(A, obs, now, bodyName, displayName) {
+  try {
+    const body = A.Body[bodyName] ?? A.Body.find(b => b === bodyName);
+    const rise = A.SearchRiseSet(body, obs, 1, now, 1, 0);
+    const set = A.SearchRiseSet(body, obs, -1, now, 1, 0);
+    const elong = A.Elongation(body, now);
+
+    const fmt = t => t ? t.date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '–';
+    const elongDeg = Math.abs(elong.elongation).toFixed(1);
+    const vis = elong.visibility;
+
+    return `<p><b>${displayName}</b></p>
+<p>Aufgang: ${fmt(rise)} · Untergang: ${fmt(set)}</p>
+<p>Elongation: ${elongDeg}° ${vis === 'morning' ? '(Morgenstern)' : vis === 'evening' ? '(Abendstern)' : ''}</p>`;
+  } catch {
+    return `<p>${displayName}: Berechnung nicht möglich für diesen Körper.</p>`;
+  }
+}
+
+function getMoonHtml(A, obs, now) {
+  try {
+    const phase = A.MoonPhase(now);
+    const pct = (50 - 50 * Math.cos(phase * Math.PI / 180)).toFixed(0);
+    const phaseName = ['Neumond','Zunehmende Sichel','Erstes Viertel','Zunehmender Mond',
+      'Vollmond','Abnehmender Mond','Letztes Viertel','Abnehmende Sichel'][Math.floor(((phase + 22.5) % 360) / 45)];
+    const rise = A.SearchRiseSet(A.Body.Moon, obs, 1, now, 1, 0);
+    const set = A.SearchRiseSet(A.Body.Moon, obs, -1, now, 1, 0);
+    const fmt = t => t ? t.date.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) : '–';
+    return `<p><b>Mond</b> – ${phaseName}</p>
+<p>Beleuchtung: ${pct}%</p>
+<p>Aufgang: ${fmt(rise)} · Untergang: ${fmt(set)}</p>`;
+  } catch { return '<p>Monddaten nicht verfügbar</p>'; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   App state & navigation
+═══════════════════════════════════════════════════════ */
+let currentDate = isoToday();
+let currentApod = null;
+let stripDates = [];
+
+async function initStrip() {
+  // Build 5-date strip ending today
+  const today = isoToday();
+  const dates = [];
+  for (let i = 4; i >= 0; i--) dates.push(addDays(today, -i));
+  stripDates = dates;
+
+  // Pre-fetch all 5 from RSS (single RSS request covers all)
+  const results = await nasaRange(dates);
+  renderStrip(results, currentDate);
+}
+
+function renderStrip(items, activeDate) {
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  for (const item of items) {
+    const div = document.createElement('div');
+    div.className = 'strip-item' + (item.date === activeDate ? ' active' : '');
+    div.dataset.date = item.date;
+
+    const icon = document.createElement('div');
+    icon.className = 's-icon';
+    icon.textContent = item.media_type === 'video' ? '▶' : '';
+
+    const img = document.createElement('img');
+    if (item.media_type === 'image') {
+      img.src = item.thumbnail || item.url;
     } else {
-      // planet or moon
-      chip.addEventListener('click',()=>toggleVisibility(chip,obj,detail));
+      // For videos, show a placeholder
+      img.style.background = '#1a2a50';
     }
-    chips.appendChild(chip);
+    img.loading = 'lazy';
+    img.alt = item.title;
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 's-date';
+    dateEl.textContent = item.date.slice(5); // MM-DD
+
+    div.append(icon, img, dateEl);
+    div.addEventListener('click', () => loadApod(item.date));
+    strip.appendChild(div);
+  }
+}
+
+function updateStripActive(date) {
+  document.querySelectorAll('.strip-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.date === date);
   });
 }
 
-function updateObjects(title, text){
-  const newObjs=detectObjects(title,text);
-  const seen=new Set(detectedObjs.map(o=>o.id));
-  for(const o of newObjs) if(!seen.has(o.id)){ detectedObjs.push(o); seen.add(o.id); }
-  renderObjects(detectedObjs);
-}
+/* ═══════════════════════════════════════════════════════
+   APOD display
+═══════════════════════════════════════════════════════ */
+async function loadApod(date) {
+  currentDate = date;
+  updateStripActive(date);
 
-/* ── Planet / Moon visibility ────────────────────────── */
-// Observer: Freudenstadt, Baden-Württemberg
-const OBS = { lat:48.46, lon:8.41, alt:500 };
-const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  // Nav button state
+  document.getElementById('btn-next').disabled = (date >= isoToday());
+  document.getElementById('btn-prev').disabled = (date <= '1995-06-16');
 
-let astroEngineLoading = false;
-function loadAstroEngine(){
-  return new Promise(resolve=>{
-    if(window.Astronomy){ resolve(true); return; }
-    if(astroEngineLoading){ // wait for existing load
-      const poll=setInterval(()=>{ if(window.Astronomy){ clearInterval(poll); resolve(true); } },100);
-      setTimeout(()=>{ clearInterval(poll); resolve(!!window.Astronomy); },8000);
-      return;
-    }
-    astroEngineLoading=true;
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/astronomy-engine@2/astronomy.browser.min.js';
-    s.onload=()=>{ astroEngineLoading=false; resolve(true); };
-    s.onerror=()=>{ astroEngineLoading=false; resolve(false); };
-    document.head.appendChild(s);
-  });
-}
+  showSkeleton();
+  hideError();
 
-async function toggleVisibility(chip, obj, detail){
-  if(chip.classList.contains('active')){
-    chip.classList.remove('active');
-    detail.innerHTML=''; detail.style.display='none';
-    return;
-  }
-  document.querySelectorAll('.chip-planet.active,.chip-moon.active').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  detail.style.display='block';
-  detail.innerHTML='<div class="vis-loading"><div class="mini-spin"></div>Berechne Sichtbarkeit…</div>';
-  const html=await computeVisibility(obj.body,obj.label);
-  detail.innerHTML=`<div class="vis-card">${html}</div>`;
-}
+  try {
+    const apod = await nasaFetch(date);
+    currentApod = apod;
+    renderApod(apod);
 
-async function computeVisibility(bodyName, displayName){
-  const ok=await loadAstroEngine();
-  if(!ok) return `<span class="vis-unavail">${displayName}: Bibliothek nicht verfügbar (ggf. offline).</span>`;
-  try{
-    const obs=new Astronomy.Observer(OBS.lat,OBS.lon,OBS.alt);
-    const now=new Date();
-    return bodyName==='Moon' ? getMoonHtml(obs,now) : getPlanetHtml(obs,now,bodyName,displayName);
-  } catch(e){
-    return `<span class="vis-unavail">Berechnungsfehler: ${e.message}</span>`;
-  }
-}
-
-function getPlanetHtml(obs, now, bodyName, displayName){
-  const elong=Astronomy.AngleFromSun(bodyName,now);
-
-  if(elong<15){
-    return `🌞 <strong>${displayName}</strong> steht in <strong>Sonnennähe</strong> und ist derzeit nicht beobachtbar.`;
-  }
-
-  // Morning or evening? Compare RA of planet vs. Sun
-  const sunEq =Astronomy.Equator('Sun',   now, obs, true, true);
-  const bodyEq=Astronomy.Equator(bodyName,now, obs, true, true);
-  let raDiff=bodyEq.ra-sunEq.ra;
-  if(raDiff<-12) raDiff+=24;
-  if(raDiff> 12) raDiff-=24;
-  const isEvening=raDiff>0;
-
-  // Rise & set (search up to 2 days ahead to cover edge cases)
-  const rise=Astronomy.SearchRiseSet(bodyName,obs,+1,now,2);
-  const set =Astronomy.SearchRiseSet(bodyName,obs,-1,now,2);
-
-  // How many months still visible (elongation ≥ 15°)?
-  let lastVisibleMonth=null;
-  for(let m=1;m<=12;m++){
-    const fd=new Date(now); fd.setMonth(fd.getMonth()+m);
-    if(Astronomy.AngleFromSun(bodyName,fd)>=15) lastVisibleMonth=MONTH_NAMES[fd.getMonth()];
-    else break;
-  }
-
-  const skyIcon =isEvening?'🌆':'🌅';
-  const skyLabel=isEvening?'Abendhimmel':'Morgenhimmel';
-
-  let rows='';
-  if(rise) rows+=`<span class="vis-tag">🌅 Aufgang <b>${fmtTime(rise.date)}</b> Uhr</span>`;
-  if(set)  rows+=`<span class="vis-tag">🌇 Untergang <b>${fmtTime(set.date)}</b> Uhr</span>`;
-  if(lastVisibleMonth) rows+=`<span class="vis-tag">📅 Sichtbar bis <b>~${lastVisibleMonth}</b></span>`;
-
-  return `${skyIcon} <strong>${displayName}</strong> am <strong>${skyLabel}</strong>
-          <div class="vis-row">${rows}</div>`;
-}
-
-function getMoonHtml(obs, now){
-  const phase=Astronomy.MoonPhase(now); // 0–360°
-  const illum=Astronomy.Illumination('Moon',now);
-  const pct=Math.round(illum.phase_fraction*100);
-
-  const PHASES=[
-    [22.5,'🌑 Neumond'],[67.5,'🌒 Zunehmende Sichel'],
-    [112.5,'🌓 Erstes Viertel'],[157.5,'🌔 Zunehmender Mond'],
-    [202.5,'🌕 Vollmond'],[247.5,'🌖 Abnehmender Mond'],
-    [292.5,'🌗 Letztes Viertel'],[337.5,'🌘 Abnehmende Sichel'],
-    [360,'🌑 Neumond'],
-  ];
-  const phaseName=(PHASES.find(([lim])=>phase<lim)||PHASES[7])[1];
-
-  const rise=Astronomy.SearchRiseSet('Moon',obs,+1,now,2);
-  const set =Astronomy.SearchRiseSet('Moon',obs,-1,now,2);
-
-  let rows=`<span class="vis-tag">💡 <b>${pct}%</b> beleuchtet</span>`;
-  if(rise) rows+=`<span class="vis-tag">🌅 Aufgang <b>${fmtTime(rise.date)}</b> Uhr</span>`;
-  if(set)  rows+=`<span class="vis-tag">🌇 Untergang <b>${fmtTime(set.date)}</b> Uhr</span>`;
-
-  return `<strong>${phaseName}</strong><div class="vis-row">${rows}</div>`;
-}
-
-/* ── Stars ───────────────────────────────────────────── */
-(()=>{
-  const c=$('stars');
-  for(let i=0;i<180;i++){
-    const s=document.createElement('div'); s.className='star';
-    const sz=Math.random()*2.2+0.3;
-    Object.assign(s.style,{width:sz+'px',height:sz+'px',top:Math.random()*100+'%',left:Math.random()*100+'%','--dur':(Math.random()*5+2).toFixed(1)+'s','--min':(Math.random()*.3).toFixed(2),'--max':(Math.random()*.7+.3).toFixed(2),animationDelay:(Math.random()*5)+'s'});
-    c.appendChild(s);
-  }
-})();
-
-/* ── Service Worker ──────────────────────────────────── */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js')
-    .then(r=>{ window._sw=r; scheduleAlarm(); }).catch(()=>{});
-}
-
-/* ── PWA Install ─────────────────────────────────────── */
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault(); deferredPrompt=e;
-  if(!ls.get('ib-off')) $('install-banner').style.display='block';
-});
-$('install-btn').addEventListener('click',async()=>{
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const{outcome}=await deferredPrompt.userChoice;
-  deferredPrompt=null; $('install-banner').style.display='none';
-  if(outcome==='accepted') showStatus('App installiert! 🎉','success');
-});
-$('dismiss-install').addEventListener('click',()=>{ ls.set('ib-off','1'); $('install-banner').style.display='none'; });
-
-/* ── Tabs ────────────────────────────────────────────── */
-document.querySelectorAll('.nav-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const t=btn.dataset.tab;
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-    $('tab-'+t).classList.add('active'); btn.classList.add('active');
-  });
-});
-
-/* ── Strip ───────────────────────────────────────────── */
-function svgPlay(){ return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 50'><rect fill='%230f1e3c' width='74' height='50'/><text x='37' y='32' text-anchor='middle' font-size='22' fill='%23c8a96e'>▶</text></svg>`; }
-
-function showStripSkel(){
-  const sc=$('strip-scroll'); sc.innerHTML='';
-  for(let i=0;i<STRIP_N;i++) sc.innerHTML+=`<div class="s-skel"><div class="skeleton sa"></div><div class="skeleton sb"></div></div>`;
-}
-function renderStrip(apods){
-  const sc=$('strip-scroll'); sc.innerHTML='';
-  [...apods].sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>{
-    const el=document.createElement('div');
-    el.className='strip-item'+(d.date===currentDate?' active':'');
-    el.dataset.date=d.date;
-    const th=d.media_type==='video'?(d.thumbnail_url||svgPlay()):(d.url||'');
-    el.innerHTML=`<img class="strip-thumb" src="${th}" alt="" loading="lazy" onerror="this.src='${svgPlay()}'" /><div class="strip-label">${fmtShort(d.date)}</div>`;
-    el.addEventListener('click',()=>selectDate(d.date));
-    sc.appendChild(el);
-  });
-  centerActive();
-}
-function updateStripActive(){ document.querySelectorAll('.strip-item').forEach(el=>el.classList.toggle('active',el.dataset.date===currentDate)); centerActive(); }
-function centerActive(){ const a=$('strip-scroll').querySelector('.strip-item.active'); if(a) setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}),60); }
-
-$('strip-prev').addEventListener('click',()=>{ const p=addDays(currentDate,-1); if(p>=APOD_MIN) selectDate(p); });
-$('strip-next').addEventListener('click',()=>{ const n=addDays(currentDate,+1); if(n<=todayStr()) selectDate(n); });
-
-async function loadStrip(){
-  showStripSkel();
-  const end=todayStr(), start=addDays(end,-(STRIP_N-1));
-  try{ stripApods=await nasaRange(start,end); renderStrip(stripApods); }
-  catch(e){ showStatus('Vorschau-Fehler: '+e.message,'error'); $('strip-scroll').innerHTML=''; }
-}
-async function extendStrip(date){
-  const end=date<=todayStr()?date:todayStr(), start=addDays(end,-(STRIP_N-1));
-  try{ stripApods=await nasaRange(start,end); renderStrip(stripApods); } catch{}
-}
-
-/* ── Main render ─────────────────────────────────────── */
-const MAX_EXP=480;
-
-function showSkeleton(on){
-  $('sk-wrap').style.display=on?'block':'none';
-  $('sk-info').style.display=on?'block':'none';
-  $('media-wrap').style.display=on?'none':'block';
-  $('info').style.display=on?'none':'block';
-}
-function setExplanation(text){
-  const btn=$('read-more-btn');
-  if(text.length>MAX_EXP){
-    $('apod-text').textContent=text.slice(0,MAX_EXP)+'…';
-    btn.style.display='inline-block';
-    btn.onclick=()=>{ $('apod-text').textContent=text; btn.style.display='none'; };
-  } else {
-    $('apod-text').textContent=text; btn.style.display='none';
-  }
-}
-
-async function selectDate(date){
-  currentDate=date; updateStripActive();
-  if(!stripApods.some(a=>a.date===date)) await extendStrip(date);
-  await renderMain(date);
-}
-
-async function renderMain(date){
-  showSkeleton(true);
-  // Reset German status + objects
-  $('de-status').className=''; $('de-status').innerHTML='';
-  $('de-link-row').style.display='none';
-  $('lang-badge').textContent='🇺🇸 Englisch';
-  detectedObjs=[]; $('objects-wrap').style.display='none';
-  $('obj-chips').innerHTML=''; $('obj-detail').innerHTML='';
-
-  try{
-    const d=await nasaFetch(date);
-    showSkeleton(false);
-
-    // Media
-    const img=$('apod-img'), vw=$('apod-video-wrap');
-    if(d.media_type==='video'){
-      if(d.thumbnail_url){
-        img.src=d.thumbnail_url; img.style.display='block';
-        img.removeAttribute('data-clickable');
-        img.onclick=()=>window.open(d.url,'_blank');
-        $('zoom-hint').textContent='▶ Video öffnen';
-        vw.style.display='none';
+    // Async: German translation
+    fetchGerman(date, apod.title).then(de => {
+      if (de) {
+        const tabDe = document.getElementById('tab-de');
+        tabDe.textContent = de;
+        document.querySelector('.tab[data-tab="de"]').style.display = '';
       } else {
-        img.style.display='none'; vw.style.display='block'; $('apod-iframe').src=d.url;
+        document.querySelector('.tab[data-tab="de"]').style.display = 'none';
       }
+    }).catch(() => {
+      document.querySelector('.tab[data-tab="de"]').style.display = 'none';
+    });
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function renderApod(apod) {
+  hideSkeleton();
+  const card = document.getElementById('apod-card');
+  card.style.display = '';
+
+  // Date & title
+  document.getElementById('apod-date').textContent = fmtDate(apod.date);
+  document.getElementById('apod-title').innerHTML =
+    apod.title + `<span class="src-badge ${_lastDataSource === 'rss' ? 'rss' : 'api'}">${_lastDataSource === 'rss' ? 'RSS' : 'API'}</span>`;
+
+  // Media
+  const imgWrap = document.getElementById('apod-img-wrap');
+  const imgEl = document.getElementById('apod-img');
+  const videoWrap = document.getElementById('video-wrap');
+  const hdBadge = document.getElementById('hd-badge');
+
+  if (apod.media_type === 'video') {
+    imgEl.style.display = 'none';
+    hdBadge.style.display = 'none';
+    videoWrap.style.display = '';
+    imgWrap.style.cursor = 'default';
+
+    // Embed video
+    if (apod.url.includes('youtube') || apod.url.includes('youtu.be')) {
+      videoWrap.innerHTML = `<iframe src="${apod.url}" allowfullscreen allow="autoplay; encrypted-media" title="${apod.title}"></iframe>`;
+    } else if (apod.url.endsWith('.mp4') || apod.url.includes('.mp4')) {
+      videoWrap.innerHTML = `<video controls style="width:100%;height:100%"><source src="${apod.url}" type="video/mp4"></video>`;
     } else {
-      img.src=d.url; img.style.display='block'; vw.style.display='none';
-      // Enable lightbox with HD url
-      const hdurl=d.hdurl||d.url;
-      img.dataset.clickable='1';
-      img.onclick=()=>openLightbox(hdurl);
-      $('zoom-hint').textContent='🔍 Vollauflösung';
+      videoWrap.innerHTML = `<iframe src="${apod.url}" allowfullscreen title="${apod.title}"></iframe>`;
     }
-
-    // English text
-    $('apod-title').textContent=d.title||'—';
-    $('apod-meta').textContent=(d.copyright?'© '+d.copyright.trim()+' · ':'')+fmtLong(d.date);
-    setExplanation(d.explanation||'');
-
-    // Detect objects from English text first
-    updateObjects(d.title||'', d.explanation||'');
-
-    // Load German translation
-    loadGerman(date, d);
-
-  } catch(e){
-    showSkeleton(false);
-    showStatus('Fehler: '+e.message,'error');
-    const c=loadApod(date);
-    if(c){
-      showStatus('Offline – gecachtes Bild','info');
-      $('apod-title').textContent=c.title||'—';
-      setExplanation(c.explanation||'');
-      if(c.url){$('apod-img').src=c.url;$('apod-img').style.display='block';}
-      $('media-wrap').style.display='block'; $('info').style.display='block';
-      updateObjects(c.title||'',c.explanation||'');
-    }
-  }
-}
-
-async function loadGerman(date, nasaData){
-  const ds=$('de-status');
-  ds.className='loading'; ds.innerHTML='<div class="mini-spin"></div>Lade deutsche Übersetzung…';
-  try{
-    const de=await fetchGerman(date);
-    $('apod-title').textContent=de.title||nasaData.title;
-    setExplanation(de.text||nasaData.explanation||'');
-    $('lang-badge').textContent='🇩🇪 Deutsch';
-    ds.className=''; ds.innerHTML='';
-    $('de-link-row').style.display='flex';
-    $('de-link').href=de.url;
-    // Re-detect objects from German text (may find additional names)
-    updateObjects(de.title||'',de.text||'');
-  } catch(e){
-    ds.className='warn'; ds.textContent='Deutsche Übersetzung nicht verfügbar – zeige Originaltext.';
-  }
-}
-
-/* ── Notifications & Periodic Background Sync ────────── */
-const nT=$('notif-toggle'), rT=$('reminder-time');
-
-function setNTxt(state){
-  const el=$('notif-txt');
-  if(state==='on')
-    el.textContent='✓ Aktiviert – täglich ~'+rT.value+' Uhr';
-  else if(state==='denied')
-    el.innerHTML='⚠ Blockiert – <u style="cursor:pointer" id="open-settings-link">Anleitung anzeigen</u>';
-  else if(state==='unsupported')
-    el.textContent='Nicht unterstützt auf diesem Gerät';
-  else
-    el.textContent='Tippe zum Aktivieren';
-  const lnk=document.getElementById('open-settings-link');
-  if(lnk) lnk.addEventListener('click', showNotifHelp);
-}
-
-function showNotifHelp(){
-  const old=document.getElementById('notif-help'); if(old) old.remove();
-  const box=document.createElement('div');
-  box.id='notif-help';
-  box.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(3,6,14,.94);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:24px;';
-  box.innerHTML=`
-    <div style="max-width:360px;background:var(--deep);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;font-family:var(--fm);">
-      <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Benachrichtigungen freischalten</div>
-      <div style="font-family:var(--fd);font-size:1rem;font-weight:300;color:var(--silver);line-height:1.75;margin-bottom:20px;">
-        Android hat die Berechtigung blockiert.<br><br>
-        <b style="color:var(--white)">1.</b> Android-<b style="color:var(--white)">Einstellungen</b> öffnen<br>
-        <b style="color:var(--white)">2.</b> → <b style="color:var(--white)">Apps</b> → <b style="color:var(--white)">APOD</b><br>
-        <b style="color:var(--white)">3.</b> → <b style="color:var(--white)">Benachrichtigungen</b> → einschalten<br>
-        <b style="color:var(--white)">4.</b> App neu öffnen und nochmals aktivieren
-      </div>
-      <button onclick="document.getElementById('notif-help').remove()"
-        style="width:100%;padding:11px;background:var(--gold);color:var(--space);border:none;border-radius:9px;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">
-        Verstanden
-      </button>
-    </div>`;
-  document.body.appendChild(box);
-}
-
-// Periodic Background Sync helpers
-const hasPBS = 'serviceWorker' in navigator &&
-               'periodicSync' in ServiceWorkerRegistration.prototype;
-
-async function registerPeriodicSync(){
-  if(!hasPBS) return false;
-  try{
-    const status=await navigator.permissions.query({name:'periodic-background-sync'});
-    if(status.state==='denied') return false;
-    const reg=await navigator.serviceWorker.ready;
-    await reg.periodicSync.register('apod-daily',{minInterval:23*60*60*1000});
-    return true;
-  } catch(e){ console.warn('PBS register:',e); return false; }
-}
-
-async function unregisterPeriodicSync(){
-  if(!hasPBS) return;
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    await reg.periodicSync.unregister('apod-daily');
-  } catch(_){}
-}
-
-async function syncApiKeyToSW(){
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    reg.active?.postMessage({type:'SET_API_KEY', key:getApiKey()});
-  } catch(_){}
-}
-
-// Init on load
-(async function initNotifState(){
-  if(!('Notification' in window)){ nT.disabled=true; setNTxt('unsupported'); return; }
-  const perm=Notification.permission;
-  if(perm==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); return; }
-  if(ls.get('notif-on')==='1' && perm==='granted'){
-    nT.checked=true; setNTxt('on'); syncApiKeyToSW();
   } else {
-    setNTxt('off');
+    videoWrap.style.display = 'none';
+    videoWrap.innerHTML = '';
+    imgEl.style.display = 'block';
+    imgEl.classList.add('loading');
+    imgEl.src = apod.url;
+    imgEl.onload = () => imgEl.classList.remove('loading');
+    imgEl.onerror = () => { imgEl.classList.remove('loading'); };
+    imgWrap.style.cursor = 'zoom-in';
+
+    if (apod.hdurl && apod.hdurl !== apod.url) {
+      hdBadge.style.display = '';
+      imgWrap.onclick = () => openLightbox(apod.hdurl);
+    } else {
+      hdBadge.style.display = 'none';
+      imgWrap.onclick = null;
+    }
   }
-})();
 
-if(ls.get('alarm-time')) rT.value=ls.get('alarm-time');
+  // English explanation
+  const tabEn = document.getElementById('tab-en');
+  tabEn.textContent = apod.explanation;
+  // Reset German tab
+  const tabDe = document.getElementById('tab-de');
+  tabDe.textContent = '';
+  document.querySelector('.tab[data-tab="de"]').style.display = 'none';
+  setActiveTab('en');
 
-nT.addEventListener('change', async()=>{
-  if(!nT.checked){
-    ls.set('notif-on','0'); setNTxt('off');
-    await unregisterPeriodicSync();
-    showStatus('Erinnerungen deaktiviert.','info');
+  // Copyright
+  const copy = document.getElementById('copyright');
+  copy.textContent = apod.copyright ? '© ' + apod.copyright : '';
+
+  // Object chips
+  renderChips(apod.title, apod.explanation);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Object chips
+═══════════════════════════════════════════════════════ */
+function renderChips(title, text) {
+  const container = document.getElementById('object-chips');
+  const objects = detectObjects(title, text);
+  container.innerHTML = '';
+
+  for (const obj of objects) {
+    const chip = document.createElement('button');
+
+    if (obj.type === 'dso') {
+      chip.className = 'chip chip-dso';
+      chip.textContent = '✦ ' + obj.label;
+      chip.onclick = () => openDsoTooltip(obj);
+    } else if (obj.type === 'planet') {
+      chip.className = 'chip chip-planet';
+      chip.textContent = '🪐 ' + obj.label;
+      chip.onclick = () => openPlanetTooltip(obj);
+    } else if (obj.type === 'sun') {
+      chip.className = 'chip chip-sun';
+      chip.textContent = '☀ Sonne';
+      chip.onclick = () => openSunTooltip();
+    } else if (obj.type === 'moon') {
+      chip.className = 'chip chip-moon';
+      chip.textContent = '🌙 Mond';
+      chip.onclick = () => openMoonTooltip();
+    }
+
+    container.appendChild(chip);
+  }
+}
+
+function openDsoTooltip(obj) {
+  document.getElementById('tt-title').textContent = obj.label;
+  document.getElementById('tt-body').innerHTML = '<p>Deepsky-Objekt – SIMBAD Datenbank</p>';
+  const link = document.getElementById('tt-link');
+  link.href = simbadUrl(obj.id);
+  link.textContent = '→ SIMBAD öffnen';
+  showTooltip();
+}
+
+async function openPlanetTooltip(obj) {
+  document.getElementById('tt-title').textContent = obj.label;
+  document.getElementById('tt-body').innerHTML = '<p>Lade Sichtbarkeitsdaten…</p>';
+  document.getElementById('tt-link').textContent = '';
+  showTooltip();
+  const html = await computeVisibility(obj.id, obj.label);
+  document.getElementById('tt-body').innerHTML = html;
+}
+
+async function openMoonTooltip() {
+  document.getElementById('tt-title').textContent = 'Mond';
+  document.getElementById('tt-body').innerHTML = '<p>Lade Monddaten…</p>';
+  document.getElementById('tt-link').textContent = '';
+  showTooltip();
+  try {
+    const A = await loadAstroEngine();
+    const obs = new A.Observer(OBS_LAT, OBS_LON, OBS_ALT);
+    document.getElementById('tt-body').innerHTML = getMoonHtml(A, obs, new Date());
+  } catch (e) {
+    document.getElementById('tt-body').innerHTML = '<p>Fehler: ' + e.message + '</p>';
+  }
+}
+
+function openSunTooltip() {
+  document.getElementById('tt-title').textContent = 'Sonne';
+  document.getElementById('tt-body').innerHTML = '<p>Aktuelle Sonnenaufnahmen vom SOHO-Observatorium.</p>';
+  const link = document.getElementById('tt-link');
+  link.href = 'https://soho.nascom.nasa.gov/data/realtime-images.html';
+  link.textContent = '→ SOHO Echtzeitbilder öffnen';
+  showTooltip();
+}
+
+function showTooltip() {
+  const tt = document.getElementById('tooltip');
+  tt.style.top = '50%';
+  tt.style.left = '50%';
+  tt.style.transform = 'translate(-50%,-50%)';
+  tt.classList.add('show');
+}
+function closeTooltip() { document.getElementById('tooltip').classList.remove('show'); }
+
+/* ═══════════════════════════════════════════════════════
+   Tabs
+═══════════════════════════════════════════════════════ */
+function setActiveTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('tab-en').classList.toggle('show', name === 'en');
+  document.getElementById('tab-de').classList.toggle('show', name === 'de');
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setActiveTab(t.dataset.tab)));
+
+/* ═══════════════════════════════════════════════════════
+   Lightbox
+═══════════════════════════════════════════════════════ */
+function openLightbox(hdurl) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lb-img');
+  const spin = document.getElementById('lb-spinner');
+  const info = document.getElementById('lb-info');
+
+  img.style.display = 'none';
+  spin.style.display = '';
+  info.textContent = 'Lade HD-Bild…';
+  lb.classList.add('open');
+
+  const tmp = new Image();
+  tmp.onload = () => {
+    spin.style.display = 'none';
+    img.src = hdurl;
+    img.style.display = '';
+    info.textContent = `${tmp.naturalWidth} × ${tmp.naturalHeight} px`;
+  };
+  tmp.onerror = () => {
+    spin.style.display = 'none';
+    info.textContent = 'HD-Bild konnte nicht geladen werden.';
+  };
+  tmp.src = hdurl;
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   Skeleton / error
+═══════════════════════════════════════════════════════ */
+function showSkeleton() {
+  document.getElementById('skeleton').style.display = '';
+  document.getElementById('apod-card').style.display = 'none';
+}
+function hideSkeleton() { document.getElementById('skeleton').style.display = 'none'; }
+function showError(msg) {
+  hideSkeleton();
+  document.getElementById('apod-card').style.display = 'none';
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('error-box').classList.add('show');
+}
+function hideError() { document.getElementById('error-box').classList.remove('show'); }
+
+/* ═══════════════════════════════════════════════════════
+   Navigation
+═══════════════════════════════════════════════════════ */
+document.getElementById('btn-prev').addEventListener('click', () => {
+  const prev = addDays(currentDate, -1);
+  if (prev >= '1995-06-16') loadApod(prev);
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  const next = addDays(currentDate, 1);
+  if (next <= isoToday()) loadApod(next);
+});
+
+/* ═══════════════════════════════════════════════════════
+   Settings
+═══════════════════════════════════════════════════════ */
+document.getElementById('btn-settings').addEventListener('click', openSettings);
+
+function openSettings() {
+  const input = document.getElementById('api-key-input');
+  input.value = ls.get('nasa-api-key') || '';
+  const alarmTime = ls.get('alarm-time') || '08:00';
+  document.getElementById('alarm-time').value = alarmTime;
+  updateNotifUI();
+  document.getElementById('settings').classList.add('open');
+}
+function closeSettings() { document.getElementById('settings').classList.remove('open'); }
+
+async function saveSettings() {
+  const raw = document.getElementById('api-key-input').value.trim();
+  const key = /^demo/i.test(raw) ? 'DEMO_KEY' : (raw || 'DEMO_KEY');
+  document.getElementById('api-key-input').value = key;
+  ls.set('nasa-api-key', key);
+  ls.set('alarm-time', document.getElementById('alarm-time').value);
+  syncApiKeyToSW();
+
+  // Test API key with a known-good historical date
+  const status = document.getElementById('settings-status');
+  status.innerHTML = '<div class="status-msg info">Prüfe API-Schlüssel…</div>';
+  try {
+    await nasaApiFetch('2024-01-01');
+    status.innerHTML = '<div class="status-msg ok">✓ API-Schlüssel gültig</div>';
+  } catch (e) {
+    status.innerHTML = `<div class="status-msg err">✗ ${e.message}</div>`;
+  }
+}
+
+function syncApiKeyToSW() {
+  if (!navigator.serviceWorker?.controller) return;
+  navigator.serviceWorker.controller.postMessage({ type: 'SET_API_KEY', key: getApiKey() });
+}
+
+/* ═══════════════════════════════════════════════════════
+   Notifications & Periodic Background Sync
+═══════════════════════════════════════════════════════ */
+const toggle = document.getElementById('notif-toggle');
+const timeRow = document.getElementById('time-row');
+
+async function updateNotifUI() {
+  if (!('Notification' in window)) {
+    toggle.disabled = true;
     return;
   }
-  if(!('Notification' in window)){ nT.checked=false; nT.disabled=true; setNTxt('unsupported'); return; }
-  if(Notification.permission==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); showNotifHelp(); return; }
-
-  // Request notification permission
-  const perm=await Notification.requestPermission();
-  if(perm==='denied'){ nT.checked=false; nT.disabled=true; setNTxt('denied'); showNotifHelp(); return; }
-  if(perm!=='granted'){ nT.checked=false; setNTxt('off'); showStatus('Berechtigung nicht erteilt – bitte nochmals versuchen.','info'); return; }
-
-  // Register Periodic Background Sync
-  const pbsOk=await registerPeriodicSync();
-  ls.set('notif-on','1'); setNTxt('on'); syncApiKeyToSW();
-
-  if(pbsOk){
-    showStatus('Tägliche Erinnerung aktiviert! 🌌 Chrome weckt die App einmal täglich.','success');
-  } else {
-    // PBS not supported or not yet granted (needs site engagement)
-    showStatus('Benachrichtigung aktiviert. Tipp: App täglich kurz öffnen damit Chrome sie als aktiv erkennt.','info');
+  const perm = Notification.permission;
+  if (perm === 'denied') {
+    toggle.disabled = true;
+    toggle.checked = false;
+    const status = document.getElementById('settings-status');
+    status.innerHTML = '<div class="status-msg err">🚫 Benachrichtigungen vom Browser blockiert. ' +
+      '<a href="#" onclick="document.getElementById(\'notif-overlay\').classList.add(\'open\');return false">Anleitung anzeigen</a></div>';
+    timeRow.style.display = 'none';
+    return;
   }
-});
-
-rT.addEventListener('change',()=>{
-  ls.set('alarm-time',rT.value);
-  if(ls.get('notif-on')==='1') setNTxt('on');
-  showStatus('Uhrzeit gespeichert: '+rT.value+' Uhr','success');
-});
-
-function scheduleAlarm(){ /* replaced by Periodic Background Sync */ }
-
-/* ── Lightbox ────────────────────────────────────────── */
-const lb      = $('lightbox');
-const lbImg   = $('lb-img');
-const lbSpin  = $('lb-spinner');
-const lbRes   = $('lb-res');
-
-function openLightbox(hdurl){
-  // Show overlay immediately with spinner
-  lbImg.style.opacity='0';
-  lbSpin.style.display='block';
-  lbRes.style.display='none';
-  lb.classList.add('open');
-  document.body.style.overflow='hidden';
-
-  // Load full-res image
-  const tmp=new Image();
-  tmp.onload=()=>{
-    lbImg.src=hdurl;
-    lbImg.style.opacity='1';
-    lbSpin.style.display='none';
-    lbRes.textContent=tmp.naturalWidth+'×'+tmp.naturalHeight+' px';
-    lbRes.style.display='block';
-  };
-  tmp.onerror=()=>{
-    // Fallback to standard url
-    lbImg.src=hdurl;
-    lbImg.style.opacity='1';
-    lbSpin.style.display='none';
-  };
-  tmp.src=hdurl;
+  toggle.disabled = false;
+  const on = ls.get('notif-on') === '1';
+  toggle.checked = on;
+  timeRow.style.display = on ? '' : 'none';
 }
 
-function closeLightbox(){
-  lb.classList.remove('open');
-  document.body.style.overflow='';
-  // Short delay before clearing src to avoid flash
-  setTimeout(()=>{ if(!lb.classList.contains('open')) lbImg.src=''; },300);
+toggle.addEventListener('change', async () => {
+  if (!toggle.checked) {
+    ls.set('notif-on', '0');
+    timeRow.style.display = 'none';
+    return;
+  }
+
+  // Request permission
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    toggle.checked = false;
+    if (perm === 'denied') {
+      document.getElementById('notif-overlay').classList.add('open');
+    }
+    return;
+  }
+
+  ls.set('notif-on', '1');
+  timeRow.style.display = '';
+  await registerPeriodicSync();
+});
+
+async function registerPeriodicSync() {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+
+  if ('periodicSync' in reg) {
+    try {
+      const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+      if (status.state === 'granted') {
+        await reg.periodicSync.register('apod-daily', { minInterval: 23 * 60 * 60 * 1000 });
+        const status2 = document.getElementById('settings-status');
+        status2.innerHTML = '<div class="status-msg ok">✓ Tägliche Erinnerung aktiviert (Periodische Synchronisierung)</div>';
+      } else {
+        const s = document.getElementById('settings-status');
+        s.innerHTML = `<div class="status-msg info">ℹ Periodische Synchronisierung nicht verfügbar (Status: ${status.state}).<br>
+          Nutze die App täglich, um die Berechtigung zu erhalten. <a href="chrome://site-engagement" target="_blank">Engagement prüfen</a></div>`;
+      }
+    } catch (e) {
+      const s = document.getElementById('settings-status');
+      s.innerHTML = `<div class="status-msg err">PBS-Fehler: ${e.message}</div>`;
+    }
+  } else {
+    const s = document.getElementById('settings-status');
+    s.innerHTML = '<div class="status-msg info">ℹ Periodische Synchronisierung nicht unterstützt. Öffne die App täglich manuell.</div>';
+  }
 }
 
-$('lb-close').addEventListener('click', closeLightbox);
-lbImg.addEventListener('click', closeLightbox);
+/* ═══════════════════════════════════════════════════════
+   Service Worker registration
+═══════════════════════════════════════════════════════ */
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    console.log('SW registered:', reg.scope);
+    setTimeout(syncApiKeyToSW, 1000);
+  } catch (e) {
+    console.warn('SW registration failed:', e);
+  }
+}
 
-// Close on backdrop click (outside image)
-lb.addEventListener('click', e=>{ if(e.target===lb) closeLightbox(); });
+/* ═══════════════════════════════════════════════════════
+   Boot
+═══════════════════════════════════════════════════════ */
+(async function init() {
+  registerSW();
 
-// Close on Escape
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+  try {
+    await initStrip();
+  } catch (e) {
+    console.warn('Strip init failed:', e);
+  }
 
-/* ── API Key ─────────────────────────────────────────── */
-$('save-api-btn').addEventListener('click',()=>{
-  let v=$('api-key-input').value.trim();
-  if(/^demo/i.test(v)) v='DEMO_KEY';
-  ls.set('nasa-api-key',v);
-  $('api-key-input').value=v||'';
-  Object.keys(localStorage).filter(k=>k.startsWith('a:')||k.startsWith('de:')).forEach(k=>localStorage.removeItem(k));
-  showStatus('Schlüssel gespeichert: '+(v||'DEMO_KEY'),'success');
-  syncApiKeyToSW();
-  setTimeout(()=>{loadStrip();renderMain(currentDate);},500);
-});
-if(ls.get('nasa-api-key')) $('api-key-input').value=ls.get('nasa-api-key');
-
-/* ── Init ────────────────────────────────────────────── */
-showSkeleton(true);
-loadStrip();
-renderMain(currentDate);
+  loadApod(isoToday());
+})();
 </script>
 </body>
 </html>
