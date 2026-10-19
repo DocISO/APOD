@@ -704,6 +704,39 @@ function detectObjects(title, text) {
     const n = parseInt(m[1]);
     if (n >= 1 && n <= 5373) found.push({ type: 'dso', id: 'IC ' + n, label: 'IC ' + n });
   }
+  // Abell galaxy clusters (A2029, Abell 370, ...)
+  const abellRe = /\b(?:Abell\s+|A\s*)(\d{3,4})\b/gi;
+  while ((m = abellRe.exec(haystack)) !== null) {
+    const id = 'Abell ' + m[1];
+    found.push({ type: 'dso', id, label: id });
+  }
+  // 3C radio catalog (3C 273, 3C 48, ...)
+  const c3Re = /\b(3[Cc]\s*\d+[A-Za-z]?)\b/g;
+  while ((m = c3Re.exec(haystack)) !== null) {
+    const id = m[1].toUpperCase().replace(/\s+/g, ' ');
+    found.push({ type: 'dso', id, label: id });
+  }
+  // Supernovae (SN 1987A, SN 2006jc, ...)
+  const snRe = /\bSN\s+(\d{4}[A-Za-z]+)\b/g;
+  while ((m = snRe.exec(haystack)) !== null) {
+    found.push({ type: 'dso', id: 'SN ' + m[1], label: 'SN ' + m[1] });
+  }
+  // J2000 catalog identifiers: CATALOG J±coords  (VLSS J0318.9+5755, PSR J0437-4715,
+  //   NVSS J..., XMM J..., Chandra J..., 2MASS J..., 4U J..., etc.)
+  // Require ≥2-char prefix so bare "J2000" coordinate-system mentions don't match.
+  const j2000Re = /\b([A-Z0-9][A-Z0-9\-]{1,8}\s+J\d{3,6}\.?\d*[+\-]\d{2,6}\.?\d*)\b/g;
+  while ((m = j2000Re.exec(haystack)) !== null) {
+    const id = m[1].replace(/\s+/g, ' ');
+    // Skip if already covered by M/NGC/IC/Abell/3C/SN above
+    if (!/^(M\d|NGC|IC\d|Abell|3C|SN\s)/i.test(id)) {
+      found.push({ type: 'dso', id, label: id });
+    }
+  }
+  // B1950 catalog identifiers: CATALOG B±coords (PSR B0531+21, ...)
+  const b1950Re = /\b([A-Z][A-Z0-9]{1,8}\s+B\d{3,6}[+\-]\d{2,6})\b/g;
+  while ((m = b1950Re.exec(haystack)) !== null) {
+    found.push({ type: 'dso', id: m[1].replace(/\s+/g, ' '), label: m[1].replace(/\s+/g, ' ') });
+  }
 
   // 2. Named objects dictionary
   for (const [re, id, label] of NAMED_OBJECTS) {
