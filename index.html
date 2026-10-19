@@ -67,6 +67,8 @@ header h1 span{color:var(--accent)}
 .chip-sun:hover{background:rgba(255,209,102,.25)}
 .chip-moon{border-color:#aabbcc;color:#aabbcc;background:rgba(170,187,204,.1)}
 .chip-moon:hover{background:rgba(170,187,204,.25)}
+.chip-comet{border-color:#66d9ef;color:#66d9ef;background:rgba(102,217,239,.1)}
+.chip-comet:hover{background:rgba(102,217,239,.25)}
 
 #tabs{display:flex;gap:0;border-bottom:1px solid #1a2540;margin-bottom:12px}
 .tab{background:none;border:none;color:var(--muted);padding:8px 14px;cursor:pointer;
@@ -618,42 +620,126 @@ const PLANETS = ['Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune']
 const PLANET_DE = { Mercury:'Merkur', Venus:'Venus', Mars:'Mars', Jupiter:'Jupiter',
   Saturn:'Saturn', Uranus:'Uranus', Neptune:'Neptun' };
 
+// Named objects → catalog ID (for SIMBAD lookup)
+// Each entry: [regex_pattern, catalog_id, display_label]
+const NAMED_OBJECTS = [
+  // Messier nebulae / galaxies by popular name
+  [/\b(orion\s+nebula|orionnebel)\b/i,           'M42',   'Orionnebel'],
+  [/\b(andromeda(\s+galaxy)?|andromedagalaxie)\b/i,'M31',  'Andromedagalaxie'],
+  [/\b(eagle\s+nebula|adlernebel|pillars\s+of\s+creation|säulen\s+der\s+schöpfung)\b/i, 'M16', 'Adlernebel'],
+  [/\b(crab\s+nebula|krebsnebel)\b/i,             'M1',    'Krebsnebel'],
+  [/\b(pleiades?|plejaden|seven\s+sisters)\b/i,   'M45',   'Plejaden'],
+  [/\b(whirlpool(\s+galaxy)?)\b/i,                'M51',   'Whirlpool'],
+  [/\b(sombrero(\s+galaxy)?)\b/i,                 'M104',  'Sombrero'],
+  [/\b(ring\s+nebula|ringnebel)\b/i,              'M57',   'Ringnebel'],
+  [/\b(dumbbell\s+nebula|hantelnebel)\b/i,        'M27',   'Hantelnebel'],
+  [/\b(lagoon\s+nebula|lagunennebel)\b/i,         'M8',    'Lagunennebel'],
+  [/\b(trifid\s+nebula|trifidnebel)\b/i,          'M20',   'Trifidnebel'],
+  [/\b(omega\s+nebula|schwanennebel|swan\s+nebula)\b/i,'M17','Schwanennebel'],
+  [/\b(triangulum(\s+galaxy)?|dreiecksgalaxie)\b/i,'M33',  'Dreiecksgalaxie'],
+  [/\b(hercules\s+cluster)\b/i,                   'M13',   'Herkuleshaufen'],
+  [/\b(horsehead\s+nebula|pferdekopfnebel)\b/i,   'B33',   'Pferdekopfnebel'],
+  [/\b(tarantula\s+nebula|tarantulanebel)\b/i,    'NGC2070','Tarantulanebel'],
+  [/\b(large\s+magellanic\s+cloud|große\s+magellansche\s+wolke|lmc)\b/i,'LMC','Große Magellansche Wolke'],
+  [/\b(small\s+magellanic\s+cloud|kleine\s+magellansche\s+wolke|smc)\b/i,'SMC','Kleine Magellansche Wolke'],
+  [/\b(milky\s+way|milchstraße)\b/i,              'Milky Way','Milchstraße'],
+  [/\b(veil\s+nebula|schleiernebel)\b/i,          'NGC6960','Schleiernebel'],
+  [/\b(california\s+nebula)\b/i,                  'NGC1499','California-Nebel'],
+  [/\b(helix\s+nebula|helixnebel|eye\s+of\s+god)\b/i,'NGC7293','Helixnebel'],
+  [/\b(butterfly\s+nebula|schmetterlingsnebel)\b/i,'NGC6302','Schmetterlingsnebel'],
+  [/\b(cartwheel\s+galaxy)\b/i,                   'ESO350-40','Cartwheel'],
+  [/\b(antennae\s+galaxies?)\b/i,                 'NGC4038','Antennengalaxien'],
+  [/\b(cat.s?\s+eye\s+nebula|katzenauge)\b/i,     'NGC6543','Katzenaugennebel'],
+  [/\b(eskimo\s+nebula)\b/i,                      'NGC2392','Eskimonebel'],
+  // Named stars
+  [/\bbetelgeuse\b/i,    'Betelgeuse', 'Betelgeuse'],
+  [/\bsirius\b/i,        'Sirius',     'Sirius'],
+  [/\brigel\b/i,         'Rigel',      'Rigel'],
+  [/\bvega\b/i,          'Vega',       'Vega'],
+  [/\bdeneb\b/i,         'Deneb',      'Deneb'],
+  [/\baltair\b/i,        'Altair',     'Altair'],
+  [/\bpollux\b/i,        'Pollux',     'Pollux'],
+  [/\bprocyon\b/i,       'Procyon',    'Procyon'],
+  [/\bcanopus\b/i,       'Canopus',    'Canopus'],
+  [/\barctur(us)?\b/i,   'Arcturus',   'Arcturus'],
+  [/\bspica\b/i,         'Spica',      'Spica'],
+  [/\bfomalhaut\b/i,     'Fomalhaut',  'Fomalhaut'],
+  [/\bproxima\s+centauri\b/i,'Proxima Cen','Proxima Centauri'],
+  [/\balpha\s+centauri\b/i,  'Alpha Cen', 'Alpha Centauri'],
+];
+
+// Comets/asteroids → JPL SBDB
+const COMET_PATTERNS = [
+  /\b(C\/\d{4}\s+[A-Z]\d*)\b/g,       // C/2020 F3 style
+  /\b(P\/\d{4}\s+[A-Z]\d*)\b/g,       // P/ style
+  /\b(\d+P\/\w+)\b/g,                  // 1P/Halley style
+  /\b(\d+P)\b/g,                       // 67P style
+];
+
+function jplUrl(id) {
+  return 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=' + encodeURIComponent(id);
+}
+
 function detectObjects(title, text) {
-  const haystack = (title + ' ' + text).toLowerCase();
+  const haystack = title + ' ' + text;
+  const haystackLow = haystack.toLowerCase();
   const found = [];
 
-  // DSO: Messier
-  const mRe = /\b(m\s?(\d{1,3}))\b/gi;
+  // 1. Catalog numbers: Messier
+  const mRe = /\bM\s?(\d{1,3})\b/g;
   let m;
   while ((m = mRe.exec(haystack)) !== null) {
-    const n = parseInt(m[2]);
+    const n = parseInt(m[1]);
     if (n >= 1 && n <= 110) found.push({ type: 'dso', id: 'M' + n, label: 'M' + n });
   }
   // NGC
-  const ngcRe = /\bngc\s?(\d{1,4})\b/gi;
+  const ngcRe = /\bNGC\s?(\d{1,4})\b/gi;
   while ((m = ngcRe.exec(haystack)) !== null) {
     const n = parseInt(m[1]);
-    if (n >= 1 && n <= 7840) found.push({ type: 'dso', id: 'NGC' + n, label: 'NGC ' + n });
+    if (n >= 1 && n <= 7840) found.push({ type: 'dso', id: 'NGC ' + n, label: 'NGC ' + n });
   }
   // IC
-  const icRe = /\bic\s?(\d{1,4})\b/gi;
+  const icRe = /\bIC\s?(\d{1,4})\b/gi;
   while ((m = icRe.exec(haystack)) !== null) {
     const n = parseInt(m[1]);
-    if (n >= 1 && n <= 5373) found.push({ type: 'dso', id: 'IC' + n, label: 'IC ' + n });
+    if (n >= 1 && n <= 5373) found.push({ type: 'dso', id: 'IC ' + n, label: 'IC ' + n });
   }
 
-  // Planets
+  // 2. Named objects dictionary
+  for (const [re, id, label] of NAMED_OBJECTS) {
+    if (re.test(haystack)) {
+      found.push({ type: 'dso', id, label });
+      re.lastIndex = 0; // reset stateful regex
+    }
+  }
+
+  // 3. Comets / asteroids → JPL
+  for (const re of COMET_PATTERNS) {
+    let cm;
+    while ((cm = re.exec(haystack)) !== null) {
+      found.push({ type: 'comet', id: cm[1], label: cm[1] });
+    }
+  }
+  // Also detect "67P" style (short form, requires "comet" nearby)
+  if (/\bcomet\b/i.test(haystack)) {
+    const shortRe = /\b(\d{1,3}P)\b/g;
+    while ((m = shortRe.exec(haystack)) !== null) {
+      found.push({ type: 'comet', id: m[1], label: m[1] });
+    }
+  }
+
+  // 4. Planets
   for (const p of PLANETS) {
-    if (haystack.includes(p.toLowerCase())) {
+    if (haystackLow.includes(p.toLowerCase())) {
       found.push({ type: 'planet', id: p, label: PLANET_DE[p] || p });
     }
   }
   // Moon
-  if (/\b(moon|mond)\b/.test(haystack)) found.push({ type: 'moon', id: 'Moon', label: 'Mond' });
+  if (/\b(moon|mond)\b/i.test(haystack)) found.push({ type: 'moon', id: 'Moon', label: 'Mond' });
   // Sun
-  if (/\b(sun|sonne|solar)\b/.test(haystack)) found.push({ type: 'sun', id: 'Sun', label: 'Sonne' });
+  if (/\b(sun|sonne|solar)\b/i.test(haystack)) found.push({ type: 'sun', id: 'Sun', label: 'Sonne' });
 
-  // Deduplicate
+  // Deduplicate by id
   const seen = new Set();
   return found.filter(f => { if (seen.has(f.id)) return false; seen.add(f.id); return true; });
 }
@@ -896,7 +982,11 @@ function renderChips(title, text) {
     if (obj.type === 'dso') {
       chip.className = 'chip chip-dso';
       chip.textContent = '✦ ' + obj.label;
-      chip.onclick = () => openDsoTooltip(obj);
+      chip.onclick = () => window.open(simbadUrl(obj.id), '_blank');
+    } else if (obj.type === 'comet') {
+      chip.className = 'chip chip-comet';
+      chip.textContent = '☄ ' + obj.label;
+      chip.onclick = () => window.open(jplUrl(obj.id), '_blank');
     } else if (obj.type === 'planet') {
       chip.className = 'chip chip-planet';
       chip.textContent = '🪐 ' + obj.label;
@@ -913,15 +1003,6 @@ function renderChips(title, text) {
 
     container.appendChild(chip);
   }
-}
-
-function openDsoTooltip(obj) {
-  document.getElementById('tt-title').textContent = obj.label;
-  document.getElementById('tt-body').innerHTML = '<p>Deepsky-Objekt – SIMBAD Datenbank</p>';
-  const link = document.getElementById('tt-link');
-  link.href = simbadUrl(obj.id);
-  link.textContent = '→ SIMBAD öffnen';
-  showTooltip();
 }
 
 async function openPlanetTooltip(obj) {
